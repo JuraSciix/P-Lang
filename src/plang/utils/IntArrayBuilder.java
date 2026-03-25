@@ -15,7 +15,7 @@ public final class IntArrayBuilder {
 
     public void add(int value) {
         if (count >= array.length) {
-            array = Arrays.copyOf(array, count >> 1);
+            array = Arrays.copyOf(array, count << 1);
         }
 
         array[count++] = value;
