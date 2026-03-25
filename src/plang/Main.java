@@ -1,5 +1,6 @@
 package plang;
 
+import plang.interpreter.CodePrinter;
 import plang.translator.*;
 import plang.utils.IOUtils;
 
@@ -15,12 +16,13 @@ public class Main {
         String str = IOUtils.readFile(file);
 
         LexerResult lexerResult = lexer.tokenize("test", str);
-        lexerResult.getTokens().forEach(System.out::println);
-        System.out.println("Tokens: " + lexerResult.getTokens().size());
         ParserResult parserResult = parser.parse(lexerResult);
 
-        AstPrintVisitor visitor = new AstPrintVisitor();
-        parserResult.getStatements().forEach(stmt -> stmt.accept(visitor));
-        visitor.flush();
+        Code code = new Code();
+        Gen gen = new Gen(code);
+        parserResult.getStatements().forEach(stmt -> stmt.accept(gen));
+
+        CodePrinter codePrinter = new CodePrinter();
+        codePrinter.print(code.getCode());
     }
 }

@@ -1,31 +1,33 @@
 package plang.interpreter;
 
 public interface OPCodeList {
+    int nop = 0;
 
-    // ПК - Пул констант.
-    // Кадр - память функции, отведенная под переменные.
-    // 3 регистра: X, Y, Z
+    // Бинарные операции
+    int add = 1;
+    int sub = 2;
+    int mul = 3;
+    int div = 4;
+    int rem = 5;
+    int bit_and = 6;
+    int bit_or = 7;
+    int bit_xor = 8;
 
-    // Бинарные операции берут значения из регистров X и Y соответственно,
-    // а результат помещают в X.
+    // Унарные операции
+    int bit_inv = 9;
+    int neg = 10;
 
-    // Операция shift смещает все значения вправо:
-    // X -> Y
-    // Y -> Z
-    // Z -> X
+    int load = 11;
+    int reset = 14;
+    int mov   = 15;
 
-    // Операция rshift смещает все значения влево:
-    // X -> Z
-    // Y -> X
-    // Z -> Y
+    int cmp_eq = 16;
+    int cmp_ne = 17;
 
-    int add = 0;
-    int sub = 0;
-    int mul = 0;
-    int div = 0;
-    int rem = 0;
-    int shift = 0;
-    int rshift = 0;
+    int jump = 18;
+    int jmp_eq = 19;
+    int jmp_ne = 20;
 
-    int _return = 0;
+    int _return = 21;
+    int leave = 22;
 }
