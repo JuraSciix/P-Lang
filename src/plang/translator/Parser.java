@@ -40,6 +40,10 @@ public class Parser {
             List<Stmt> children = new ArrayList<>();
             while (reader.hasRemaining()) {
                 Token tk1 = reader.currentToken();
+                if (tk1.hasType(SEP)) {
+                    reader.step();
+                    continue;
+                }
                 if (tk1.hasType(RBRACE)) {
                     reader.step();
                     break;
@@ -57,14 +61,14 @@ public class Parser {
                 if (tk1.hasType(ASG)) {
                     reader.step();
                     String name = reader.getTokenData(tk);
-                    Expr expr = parseExpr(reader);
+                    Expr expr = parseIf(reader);
                     return new Asg(tk1.pos, name, expr);
                 }
             }
             reader.stepBack();
         }
 
-        return parseIf(reader);
+        return parseReturn(reader);
     }
 
     // Приоритеты операций:
@@ -75,6 +79,24 @@ public class Parser {
     // - (унарный), + (унарный)
     // Переменная
     // Скобки
+
+    private Expr parseReturn(TokenReader reader) {
+        Token tk = reader.currentToken();
+
+        if (tk.hasType(RETURN)) {
+            reader.step();
+            Expr expr = null;
+            if (reader.hasRemaining()) {
+                Token tk1 = reader.currentToken();
+                if (!tk1.hasType(SEP)) {
+                    expr = parseIf(reader);
+                }
+            }
+            return new Return(tk.pos, expr);
+        }
+
+        return parseIf(reader);
+    }
 
     private Expr parseIf(TokenReader reader) {
         Token tk = reader.currentToken();
@@ -90,29 +112,10 @@ public class Parser {
                 Token tk1 = reader.currentToken();
                 if (tk1.hasType(ELSE)) {
                     reader.step();
-                    parseStmt(reader);
                     elseBody = parseStmt(reader);
                 }
             }
             return new If(tk.pos, expr, thenBody, elseBody);
-        }
-
-        return parseReturn(reader);
-    }
-
-    private Expr parseReturn(TokenReader reader) {
-        Token tk = reader.currentToken();
-
-        if (tk.hasType(RETURN)) {
-            reader.step();
-            Expr expr = null;
-            if (reader.hasRemaining()) {
-                Token tk1 = reader.currentToken();
-                if (!tk1.hasType(SEP)) {
-                    expr = parseExpr(reader);
-                }
-            }
-            return new Return(tk.pos, expr);
         }
 
         return parseExpr(reader);
