@@ -53,54 +53,6 @@ public class Parser {
             return new Compound(tk.pos, children);
         }
 
-        // Один из немногих случаев, когда нужно посмотреть сразу два токена вперед:
-        if (tk.hasType(IDENTIFIER)) {
-            reader.step();
-            if (reader.hasRemaining()) {
-                Token tk1 = reader.currentToken();
-                if (tk1.hasType(ASG)) {
-                    reader.step();
-                    String name = reader.getTokenData(tk);
-                    Expr expr = parseIf(reader);
-                    return new Asg(tk1.pos, name, expr);
-                }
-            }
-            reader.stepBack();
-        }
-
-        return parseReturn(reader);
-    }
-
-    // Приоритеты операций:
-    // return
-    // +, -
-    // %
-    // *, /
-    // - (унарный), + (унарный)
-    // Переменная
-    // Скобки
-
-    private Expr parseReturn(TokenReader reader) {
-        Token tk = reader.currentToken();
-
-        if (tk.hasType(RETURN)) {
-            reader.step();
-            Expr expr = null;
-            if (reader.hasRemaining()) {
-                Token tk1 = reader.currentToken();
-                if (!tk1.hasType(SEP)) {
-                    expr = parseIf(reader);
-                }
-            }
-            return new Return(tk.pos, expr);
-        }
-
-        return parseIf(reader);
-    }
-
-    private Expr parseIf(TokenReader reader) {
-        Token tk = reader.currentToken();
-
         if (tk.hasType(IF)) {
             reader.step();
             expect(reader, LPAREN);
@@ -118,18 +70,45 @@ public class Parser {
             return new If(tk.pos, expr, thenBody, elseBody);
         }
 
-        return parseExpr(reader);
-    }
-
-    private Expr parseExpr(TokenReader reader) {
-        Token tk = reader.currentToken();
-
         if (tk.hasType(RETURN)) {
             reader.step();
-            Expr expr = parseAdd(reader);
+            Expr expr = null;
+            if (reader.hasRemaining()) {
+                Token tk1 = reader.currentToken();
+                if (!tk1.hasType(SEP)) {
+                    expr = parseExpr(reader);
+                }
+            }
             return new Return(tk.pos, expr);
         }
 
+        // Один из немногих случаев, когда нужно посмотреть сразу два токена вперед:
+        if (tk.hasType(IDENTIFIER)) {
+            reader.step();
+            if (reader.hasRemaining()) {
+                Token tk1 = reader.currentToken();
+                if (tk1.hasType(ASG)) {
+                    reader.step();
+                    String name = reader.getTokenData(tk);
+                    Expr expr = parseExpr(reader);
+                    return new Asg(tk1.pos, name, expr);
+                }
+            }
+            reader.stepBack();
+        }
+
+        return parseExpr(reader);
+    }
+
+    // Приоритеты операций:
+    // +, -
+    // %
+    // *, /
+    // - (унарный), + (унарный)
+    // Переменная
+    // Скобки
+
+    private Expr parseExpr(TokenReader reader) {
         return parseAdd(reader);
     }
 

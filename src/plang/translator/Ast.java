@@ -6,11 +6,11 @@ public interface Ast {
 
     class Visitor {
         public void visitCompound(Compound stmt) { visitStmt(stmt); }
+        public void visitIf(If stmt) { visitStmt(stmt); }
+        public void visitReturn(Return stmt) { visitStmt(stmt); }
         public void visitAsg(Asg stmt) { visitStmt(stmt); }
         public void visitBinaryOp(BinaryOp stmt) { visitStmt(stmt); }
         public void visitUnaryOp(UnaryOp stmt) { visitStmt(stmt); }
-        public void visitReturn(Return stmt) { visitStmt(stmt); }
-        public void visitIf(If stmt) { visitStmt(stmt); }
         public void visitValue(Value stmt) { visitStmt(stmt); }
         public void visitParens(Parens stmt) { visitStmt(stmt); }
         public void visitStmt(Stmt stmt) { assert stmt != null; }
@@ -44,6 +44,35 @@ public interface Ast {
         }
     }
 
+
+    final class If extends Stmt {
+        public final Expr condition;
+        public final Stmt thenBody;
+        public final Stmt elseBody;
+
+        public If(int pos, Expr condition, Stmt thenBody, Stmt elseBody) {
+            super(pos);
+            this.condition = condition;
+            this.thenBody = thenBody;
+            this.elseBody = elseBody;
+        }
+
+        @Override
+        public void accept(Visitor visitor) { visitor.visitIf(this); }
+    }
+
+    class Return extends Stmt {
+        public final Expr expr;
+
+        public Return(int pos, Expr expr) {
+            super(pos);
+            this.expr = expr;
+        }
+
+        @Override
+        public void accept(Visitor visitor) { visitor.visitReturn(this); }
+    }
+
     final class Asg extends Stmt {
         public final String name;
         public final Expr expr;
@@ -62,6 +91,7 @@ public interface Ast {
 
     abstract class Expr extends Stmt {
         public enum Tag {
+            NOP,
             ADD,
             SUB,
             MUL,
@@ -80,25 +110,6 @@ public interface Ast {
         }
 
         public abstract Tag getTag();
-    }
-
-    final class If extends Expr {
-        public final Expr condition;
-        public final Stmt thenBody;
-        public final Stmt elseBody;
-
-        public If(int pos, Expr condition, Stmt thenBody, Stmt elseBody) {
-            super(pos);
-            this.condition = condition;
-            this.thenBody = thenBody;
-            this.elseBody = elseBody;
-        }
-
-        @Override
-        public Tag getTag() { return Tag.IF; }
-
-        @Override
-        public void accept(Visitor visitor) { visitor.visitIf(this); }
     }
 
     class BinaryOp extends Expr {
@@ -134,21 +145,6 @@ public interface Ast {
 
         @Override
         public void accept(Visitor visitor) { visitor.visitUnaryOp(this); }
-    }
-
-    class Return extends Expr {
-        public final Expr expr;
-
-        public Return(int pos, Expr expr) {
-            super(pos);
-            this.expr = expr;
-        }
-
-        @Override
-        public Tag getTag() { return Tag.RETURN; }
-
-        @Override
-        public void accept(Visitor visitor) { visitor.visitReturn(this); }
     }
 
     class Value extends Expr {
