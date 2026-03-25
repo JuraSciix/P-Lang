@@ -20,18 +20,6 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
-    public void visitIf(If tree) {
-        output.println("IF (");
-        tree.condition.accept(this);
-        output.println(")");
-        tree.thenBody.accept(this);
-        if (tree.elseBody != null) {
-            output.println("ELSE");
-            tree.elseBody.accept(this);
-        }
-    }
-
-    @Override
     public void visitAsg(Asg tree) {
         output.print("VAR ");
         output.print(tree.name);
