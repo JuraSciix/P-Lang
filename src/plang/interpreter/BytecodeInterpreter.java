@@ -178,7 +178,7 @@ public class BytecodeInterpreter {
                 }
 
                 case jmp_z: {
-                    if (flag == 1) {
+                    if (flag == 0) {
                         cp = Bytes.read2ub(code, cp + 1);
                         break;
                     }
@@ -187,7 +187,7 @@ public class BytecodeInterpreter {
                 }
 
                 case jmp_nz: {
-                    if (flag == 0) {
+                    if (flag == 1) {
                         cp = Bytes.read2ub(code, cp + 1);
                         break;
                     }
