@@ -10,7 +10,7 @@ public class BytecodeInterpreter {
         int[] registers = new int[256];
         int[] constantPool = block.constantPool;
 
-        while (true) {
+        while (0 <= cp && cp < code.length) {
             switch (code[cp]) {
                 case add: {
                     int index1 = code[cp + 1];
@@ -130,5 +130,7 @@ public class BytecodeInterpreter {
                             OPCodeInfo.opcodeString(code[cp]));
             }
         }
+
+        return -1;
     }
 }
