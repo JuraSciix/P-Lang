@@ -84,23 +84,23 @@ public class Gen extends Visitor {
     @Override
     public void visitBinaryOp(BinaryOp stmt) {
         ValueItem result = destItem.load();
-        ValueItem lhs = gen(stmt.lhs, result).accept(result).load();
-        ValueItem rhs = gen(stmt.rhs).load();
+        ValueItem lhs = gen(stmt.lhs, result).acceptLeft(result);
+        ValueItem rhs = lhs.acceptRight(gen(stmt.rhs), result);
         code.emitPos(stmt.pos);
         code.emitBinary(AstInfo.opcodeFromTag(stmt.tag), lhs.index, rhs.index, result.index);
         lhs.dispose();
         rhs.dispose();
-        genItem = items.valueItem(result.index);
+        genItem = result;
     }
 
     @Override
     public void visitUnaryOp(UnaryOp stmt) {
         ValueItem result = destItem.load();
-        ValueItem item = gen(stmt.expr, result).accept(result).load();
+        ValueItem item = gen(stmt.expr, result).acceptLeft(result).load();
         code.emitPos(stmt.pos);
         code.emitUnary(AstInfo.opcodeFromTag(stmt.tag), item.index, result.index);
         item.dispose();
-        genItem = items.valueItem(result.index);
+        genItem = result;
     }
 
     @Override

@@ -44,7 +44,12 @@ class Items {
             // nop
         }
 
-        Item accept(Item item) {
+        ValueItem acceptLeft(Item item) {
+            int index = item.load().index;
+            return load(index);
+        }
+
+        ValueItem acceptRight(Item item, Item destination) {
             throw new UnsupportedOperationException(getClass().getName());
         }
 
@@ -54,6 +59,7 @@ class Items {
     }
 
     class OpItem extends Item {
+        // EMTPY
     }
 
     class DynamicItem extends Item {
@@ -64,11 +70,6 @@ class Items {
 
         ValueItem load(int index) {
             return localItem(index);
-        }
-
-        @Override
-        Item accept(Item item) {
-            return item;
         }
     }
 
@@ -97,8 +98,15 @@ class Items {
         }
 
         @Override
-        Item accept(Item item) {
-            return item.load(index);
+        ValueItem acceptRight(Item item, Item destination) {
+            return item.acceptLeft(dynamicItem());
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ValueItem)) return false;
+            ValueItem other = (ValueItem) obj;
+            return index == other.index;
         }
     }
 
@@ -116,8 +124,20 @@ class Items {
         }
 
         @Override
-        Item accept(Item item) {
+        ValueItem acceptLeft(Item item) {
             return this;
+        }
+
+        @Override
+        ValueItem acceptRight(Item item, Item destination) {
+            if (equals(destination)) {
+                // Мы не можем позволить перезаписать себя
+                return super.acceptRight(item, destination);
+            } else {
+                // Дизпоуз item.acceptLeft() возможен только через дизпоуз destination. Не наоборот.
+                int index = item.acceptLeft(destination).index;
+                return localItem(index);
+            }
         }
     }
 
@@ -137,6 +157,13 @@ class Items {
         ValueItem load(int index) {
             code.emit2(load, constIndex, index);
             return valueItem(index);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ConstItem)) return false;
+            ConstItem other = (ConstItem) obj;
+            return constIndex == other.constIndex;
         }
     }
 
