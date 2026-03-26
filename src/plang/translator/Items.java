@@ -61,7 +61,10 @@ class Items {
 
         CondItem cond(int opcode) {
             ValueItem item = load();
-            code.emitUnary(opcode, item.index, constItem(constTable.lookup(0)).load().index);
+            ValueItem zero = constItem(constTable.lookup(0)).load();
+            code.emitUnary(opcode, item.index, zero.index);
+            item.dispose();
+            zero.dispose();
             return new CondItem(opcode);
         }
     }
