@@ -60,6 +60,34 @@ public class Lexer {
                 continue;
             }
 
+            if (ch == '\\') {
+                // Перенос строки: \\ + \r?\n
+                reader.step();
+                if (reader.hasRemaining()) {
+                    char ch1 = reader.currentChar();
+                    boolean newline = false;
+                    if (ch1 == '\n') {
+                        reader.step();
+                        newline = true;
+                    }
+                    if (ch1 == '\r') {
+                        reader.step();
+                        if (reader.hasRemaining()) {
+                            ch1 = reader.currentChar();
+                            if (ch1 == '\n') {
+                                reader.step();
+                                newline = true;
+                            }
+                        }
+                    }
+                    if (newline) {
+                        continue;
+                    }
+                }
+
+                reader.stepBack();
+            }
+
             // Особый случай
             if (ch == '/') {
                 reader.step();
