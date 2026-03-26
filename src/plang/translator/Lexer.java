@@ -118,6 +118,16 @@ public class Lexer {
                 reader.step();
                 while (reader.hasRemaining()) {
                     ch = reader.currentChar();
+                    if (ch == '_') {
+                        reader.step();
+                        if (reader.hasRemaining()) {
+                            char ch1 = reader.currentChar();
+                            if ('0' <= ch1 && ch1 <= '9') {
+                                continue;
+                            }
+                        }
+                        throw new IllegalArgumentException("Digit expected at " + reader.getPosition());
+                    }
                     if (!('0' <= ch && ch <= '9')) {
                         break;
                     }
