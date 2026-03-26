@@ -109,7 +109,75 @@ public class Parser {
     // Скобки
 
     private Expr parseExpr(TokenReader reader) {
-        return parseAdd(reader);
+        return parseEq(reader);
+    }
+
+    private Expr parseEq(TokenReader reader) {
+        // Look-ahead
+        Expr lhs = parseNonEq(reader);
+
+        while (reader.hasRemaining()) {
+            Token tk = reader.currentToken();
+
+            if (tk.hasType(EQ)) {
+                reader.step();
+                Expr rhs = parseNonEq(reader);
+                lhs = new BinaryOp(tk.pos, Tag.CMP_EQ, lhs, rhs);
+                continue;
+            }
+
+            if (tk.hasType(NOT_EQ)) {
+                reader.step();
+                Expr rhs = parseNonEq(reader);
+                lhs = new BinaryOp(tk.pos, Tag.CMP_NE, lhs, rhs);
+                continue;
+            }
+
+            break;
+        }
+
+        return lhs;
+    }
+
+    private Expr parseNonEq(TokenReader reader) {
+        // Look-ahead
+        Expr lhs = parseAdd(reader);
+
+        while (reader.hasRemaining()) {
+            Token tk = reader.currentToken();
+
+            if (tk.hasType(LT)) {
+                reader.step();
+                Expr rhs = parseAdd(reader);
+                lhs = new BinaryOp(tk.pos, Tag.CMP_LT, lhs, rhs);
+                continue;
+            }
+
+            if (tk.hasType(LT_EQ)) {
+                reader.step();
+                Expr rhs = parseAdd(reader);
+                lhs = new BinaryOp(tk.pos, Tag.CMP_LE, lhs, rhs);
+                continue;
+            }
+
+            if (tk.hasType(GT)) {
+                reader.step();
+                Expr rhs = parseAdd(reader);
+                lhs = new BinaryOp(tk.pos, Tag.CMP_GT, lhs, rhs);
+                continue;
+            }
+
+            if (tk.hasType(GT_EQ)) {
+                reader.step();
+                Expr rhs = parseAdd(reader);
+                lhs = new BinaryOp(tk.pos, Tag.CMP_GE, lhs, rhs);
+                continue;
+            }
+
+            break;
+        }
+
+        return lhs;
     }
 
     private Expr parseAdd(TokenReader reader) {

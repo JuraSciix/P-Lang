@@ -17,6 +17,11 @@ public enum TokenType {
     PERCENT,
     EQ,
     ASG,
+    NOT_EQ,
+    LT,
+    LT_EQ,
+    GT,
+    GT_EQ,
 
     IF,
     ELSE,

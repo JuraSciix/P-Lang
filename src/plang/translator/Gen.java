@@ -104,11 +104,20 @@ public class Gen extends Visitor {
         ValueItem result = destItem.load();
         ValueItem lhs = gen(stmt.lhs, result).acceptLeft(result);
         ValueItem rhs = lhs.acceptRight(gen(stmt.rhs), result);
-        code.emitPos(stmt.pos);
-        code.emitBinary(AstInfo.opcodeFromTag(stmt.tag), lhs.index, rhs.index, result.index);
         lhs.dispose();
         rhs.dispose();
-        genItem = result;
+
+        code.emitPos(stmt.pos);
+
+        int opcode = AstInfo.opcodeFromTag(stmt.tag);
+        if (AstInfo.isComparing(stmt.tag)) {
+            code.emit2(opcode, lhs.index, rhs.index);
+            genItem = items.condItem(opcode);
+        } else {
+            code.emitBinary(opcode, lhs.index, rhs.index, result.index);
+            genItem = result;
+        }
+
     }
 
     @Override

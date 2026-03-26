@@ -24,6 +24,11 @@ public class Lexer {
         operators.put("}", TokenType.RBRACE);
         operators.put("=", TokenType.ASG);
         operators.put("==", TokenType.EQ);
+        operators.put("!=", TokenType.NOT_EQ);
+        operators.put("<", TokenType.LT);
+        operators.put("<=", TokenType.LT_EQ);
+        operators.put(">", TokenType.GT);
+        operators.put(">=", TokenType.GT_EQ);
         operators.put(";", TokenType.SEP);
 
         keywords.put("if", TokenType.IF);

@@ -1,6 +1,28 @@
-a = 0
-if (a) {
-    return 10
-} else {
-    return 20
+i = 0
+n = 10
+
+if (n > 0) {
+    i = i + 1
 }
+
+if (n >= 0) {
+    i = i + 1
+}
+
+if (n == 0) {
+    i = i + 1
+}
+
+if (n != 0) {
+    i = i + 1
+}
+
+if (n < 0) {
+    i = i + 1
+}
+
+if (n <= 0) {
+    i = i + 1
+}
+
+return i

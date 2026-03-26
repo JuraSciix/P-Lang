@@ -31,6 +31,10 @@ class Items {
         return new ConstItem(constIndex);
     }
 
+    CondItem condItem(int opcode) {
+        return new CondItem(opcode);
+    }
+
     abstract class Item {
         ValueItem load() {
             throw new UnsupportedOperationException();
@@ -190,6 +194,26 @@ class Items {
 
         CondItem(int opcode) {
             this.opcode = opcode;
+        }
+
+        @Override
+        ValueItem load() {
+            return load(code.allocReg());
+        }
+
+        @Override
+        ValueItem load(int index) {
+            Item zero = constItem(constTable.lookup(0));
+            Item one = constItem(constTable.lookup(1));
+
+            resolveTrueJumps();
+            one.load(index);
+            Code.Jump leave = code.jump(jump);
+            resolveFalseJumps();
+            zero.load(index);
+            code.resolveJump(leave);
+
+            return valueItem(index);
         }
 
         @Override
