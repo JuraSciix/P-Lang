@@ -31,8 +31,8 @@ class Items {
         return new ConstItem(constIndex);
     }
 
-    CondItem condItem(int opcode) {
-        return new CondItem(opcode);
+    CondItem condItem() {
+        return new CondItem();
     }
 
     abstract class Item {
@@ -65,16 +65,12 @@ class Items {
         }
 
         CondItem cond() {
-            return cond(cmp_eq);
-        }
-
-        CondItem cond(int opcode) {
             ValueItem item = load();
             ValueItem zero = constItem(constTable.lookup(0)).load();
-            code.emitUnary(opcode, item.index, zero.index);
+            code.emitUnary(cmp_ne, item.index, zero.index);
             item.dispose();
             zero.dispose();
-            return new CondItem(opcode);
+            return new CondItem();
         }
     }
 
@@ -190,6 +186,10 @@ class Items {
         Code.Jump falseJump = null;
         Code.Jump trueJump = null;
 
+        CondItem() {
+            this(jmp_z);
+        }
+
         CondItem(int opcode) {
             this.opcode = opcode;
         }
@@ -219,8 +219,12 @@ class Items {
             return this;
         }
 
+        CondItem negate() {
+            return new CondItem(OPCodes.negate(opcode));
+        }
+
         void resolveTrueJumps() {
-            falseJump = code.jump(jmp_z);
+            falseJump = code.jump(opcode);
             if (trueJump != null) {
                 code.resolveJump(trueJump);
             }

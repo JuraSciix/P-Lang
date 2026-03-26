@@ -1,4 +1,9 @@
 i = 0
-while (i < 1_000_000) {
+S = 0
+n = 100
+while (i < n) {
     i = i + 1
+    S = S + i
 }
+
+return S - n * (n + 1) / 2

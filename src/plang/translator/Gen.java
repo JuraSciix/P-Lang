@@ -121,7 +121,7 @@ public class Gen extends Visitor {
         int opcode = AstInfo.opcodeFromTag(stmt.tag);
         if (AstInfo.isComparing(stmt.tag)) {
             code.emit2(opcode, lhs.index, rhs.index);
-            genItem = items.condItem(opcode);
+            genItem = items.condItem();
         } else {
             code.emitBinary(opcode, lhs.index, rhs.index, result.index);
             genItem = result;
