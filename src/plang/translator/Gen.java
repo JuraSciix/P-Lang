@@ -113,10 +113,8 @@ public class Gen extends Visitor {
     @Override
     public void visitBinaryOp(BinaryOp stmt) {
         ValueItem result = destItem.load();
-        ValueItem lhs = gen(stmt.lhs, result).acceptLeft(result);
-        ValueItem rhs = lhs.acceptRight(gen(stmt.rhs), result);
-        lhs.dispose();
-        rhs.dispose();
+        ValueItem lhs = gen(stmt.lhs, result).acceptLeft(result.local());
+        ValueItem rhs = lhs.acceptRight(gen(stmt.rhs), result.local());
 
         code.emitPos(stmt.pos);
 
@@ -129,6 +127,8 @@ public class Gen extends Visitor {
             genItem = result;
         }
 
+        lhs.dispose();
+        rhs.dispose();
     }
 
     @Override
