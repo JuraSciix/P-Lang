@@ -10,7 +10,7 @@ public class Gen extends Visitor {
     private final Items items;
     private final LocalTable localTable;
     private final ConstTable constTable;
-    Item receivingItem;
+    Item destItem;
     Item genItem;
 
     public Gen(Code code) {
@@ -31,16 +31,16 @@ public class Gen extends Visitor {
         return gen(stmt, items.dynamicItem());
     }
 
-    Item gen(Stmt stmt, Item receiver) {
-        Item prevReceivingItem = receivingItem;
+    Item gen(Stmt stmt, Item destination) {
+        Item prevDestItem = destItem;
         Item prevGenItem = genItem;
 
         try {
-            receivingItem = receiver;
+            destItem = destination;
             stmt.accept(this);
             return genItem;
         } finally {
-            receivingItem = prevReceivingItem;
+            destItem = prevDestItem;
             genItem = prevGenItem;
         }
     }
@@ -76,30 +76,31 @@ public class Gen extends Visitor {
         }
 
         LocalItem item = items.localItem(index);
-        gen(stmt.expr, item).load(item.index);
+        gen(stmt.expr, item).load(index);
+
         genItem = items.operItem();
     }
 
     @Override
     public void visitBinaryOp(BinaryOp stmt) {
-        ValueItem lhs = gen(stmt.lhs).load();
+        ValueItem result = destItem.load();
+        ValueItem lhs = gen(stmt.lhs, result).accept(result).load();
         ValueItem rhs = gen(stmt.rhs).load();
-        ValueItem result = receivingItem.load();
         code.emitPos(stmt.pos);
         code.emitBinary(AstInfo.opcodeFromTag(stmt.tag), lhs.index, rhs.index, result.index);
         lhs.dispose();
         rhs.dispose();
-        genItem = result;
+        genItem = items.valueItem(result.index);
     }
 
     @Override
     public void visitUnaryOp(UnaryOp stmt) {
-        ValueItem item = gen(stmt.expr).load();
-        int resultIndex = code.allocReg();
+        ValueItem result = destItem.load();
+        ValueItem item = gen(stmt.expr, result).accept(result).load();
         code.emitPos(stmt.pos);
-        code.emitUnary(AstInfo.opcodeFromTag(stmt.tag), item.index, resultIndex);
+        code.emitUnary(AstInfo.opcodeFromTag(stmt.tag), item.index, result.index);
         item.dispose();
-        genItem = items.valueItem(resultIndex);
+        genItem = items.valueItem(result.index);
     }
 
     @Override

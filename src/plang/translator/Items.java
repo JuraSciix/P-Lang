@@ -44,6 +44,10 @@ class Items {
             // nop
         }
 
+        Item accept(Item item) {
+            throw new UnsupportedOperationException(getClass().getName());
+        }
+
         CondItem toCond() {
             return new CondItem();
         }
@@ -55,13 +59,16 @@ class Items {
     class DynamicItem extends Item {
 
         ValueItem load() {
-            // ВАЖНО: регистр НЕ становится занятым!
-            // Он может быть перезаписан!
-            return load(code.freeReg());
+            return load(code.allocReg());
         }
 
         ValueItem load(int index) {
-            return valueItem(index);
+            return localItem(index);
+        }
+
+        @Override
+        Item accept(Item item) {
+            return item;
         }
     }
 
@@ -79,6 +86,7 @@ class Items {
 
         @Override
         ValueItem load(int index) {
+            if (this.index == index) return this;
             code.emit2(mov, this.index, index);
             return valueItem(index);
         }
@@ -86,6 +94,11 @@ class Items {
         @Override
         void dispose() {
             code.releaseReg(index);
+        }
+
+        @Override
+        Item accept(Item item) {
+            return item.load(index);
         }
     }
 
@@ -101,6 +114,11 @@ class Items {
         void dispose() {
             // nope
         }
+
+        @Override
+        Item accept(Item item) {
+            return this;
+        }
     }
 
     class ConstItem extends Item {
@@ -112,9 +130,7 @@ class Items {
 
         @Override
         ValueItem load() {
-            // ВАЖНО: регистр НЕ становится занятым!
-            // Он может быть перезаписан!
-            return load(code.freeReg());
+            return load(code.allocReg());
         }
 
         @Override
