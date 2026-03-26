@@ -14,10 +14,11 @@ public final class Trie<V> {
             this.key = key;
         }
 
+        boolean hasValue = false;
         V value;
 
         public V getValue() {
-            if (value == null) {
+            if (!hasValue) {
                 throw new IllegalStateException();
             }
             return value;
@@ -48,6 +49,7 @@ public final class Trie<V> {
         }
 
         parent.value = value;
+        parent.hasValue = true;
     }
 
     public V get(String key) {
@@ -66,6 +68,10 @@ public final class Trie<V> {
             layer = parent.children;
         }
 
+        if (!parent.hasValue) {
+            throw new NoSuchElementException();
+        }
+
         return parent.value;
     }
 
@@ -75,16 +81,17 @@ public final class Trie<V> {
         }
 
         List<Node<V>> layer = data;
+        Node<V> parent = null;
         for (int i = 0; i < key.length(); i++) {
             char ch = key.charAt(i);
-            Node<V> parent = find(layer, ch);
+            parent = find(layer, ch);
             if (parent == null) {
                 return false;
             }
             layer = parent.children;
         }
 
-        return true;
+        return parent.hasValue;
     }
 
     public Node<V> findNode(char key) {
