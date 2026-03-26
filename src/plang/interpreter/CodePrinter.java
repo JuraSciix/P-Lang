@@ -9,8 +9,9 @@ public class CodePrinter {
     public void print(byte[] code) {
         int i = 0;
         while (i < code.length) {
-            OPCodeInfo info = OPCodeInfo.info(code[i++]);
+            OPCodeInfo info = OPCodeInfo.info(code[i]);
             stream.printf("%4d. ", i);
+            i++;
             stream.print(info.name);
             for (OPCodeInfo.Param param : info.params) {
                 stream.print(' ');
