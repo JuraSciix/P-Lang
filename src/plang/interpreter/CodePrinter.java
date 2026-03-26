@@ -9,7 +9,7 @@ public class CodePrinter {
     public void print(byte[] code) {
         int i = 0;
         while (i < code.length) {
-            OPCodeInfo info = OPCodeInfo.info(code[i]);
+            OPCodeInfo info = OPCodeInfo.info(Bytes.readUB(code, i));
             stream.printf("%4d. ", i);
             i++;
             stream.print(info.name);
@@ -17,11 +17,11 @@ public class CodePrinter {
                 stream.print(' ');
                 switch (param) {
                     case INDEX:
-                        stream.print(code[i]);
+                        stream.print(Bytes.readUB(code, i));
                         i++;
                         break;
                     case DOUBLE_INDEX:
-                        stream.print(Bytes.read2ub(code, i));
+                        stream.print(Bytes.read2UB(code, i));
                         i += 2;
                         break;
                 }

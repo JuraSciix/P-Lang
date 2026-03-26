@@ -12,174 +12,174 @@ public class BytecodeInterpreter {
         int flag = 0;
 
         while (0 <= cp && cp < code.length) {
-            switch (code[cp]) {
+            switch (Bytes.readUB(code, cp)) {
                 case add: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
-                    int index3 = code[cp + 3];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
+                    int index3 = Bytes.readUB(code, cp + 3);
                     registers[index3] = registers[index1] + registers[index2];
                     cp += 4;
                     break;
                 }
 
                 case sub: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
-                    int index3 = code[cp + 3];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
+                    int index3 = Bytes.readUB(code, cp + 3);
                     registers[index3] = registers[index1] - registers[index2];
                     cp += 4;
                     break;
                 }
 
                 case mul: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
-                    int index3 = code[cp + 3];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
+                    int index3 = Bytes.readUB(code, cp + 3);
                     registers[index3] = registers[index1] * registers[index2];
                     cp += 4;
                     break;
                 }
 
                 case div: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
-                    int index3 = code[cp + 3];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
+                    int index3 = Bytes.readUB(code, cp + 3);
                     registers[index3] = registers[index1] / registers[index2];
                     cp += 4;
                     break;
                 }
 
                 case rem: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
-                    int index3 = code[cp + 3];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
+                    int index3 = Bytes.readUB(code, cp + 3);
                     registers[index3] = registers[index1] % registers[index2];
                     cp += 4;
                     break;
                 }
 
                 case bit_and: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
-                    int index3 = code[cp + 3];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
+                    int index3 = Bytes.readUB(code, cp + 3);
                     registers[index3] = registers[index1] & registers[index2];
                     cp += 4;
                     break;
                 }
 
                 case bit_or: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
-                    int index3 = code[cp + 3];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
+                    int index3 = Bytes.readUB(code, cp + 3);
                     registers[index3] = registers[index1] | registers[index2];
                     cp += 4;
                     break;
                 }
 
                 case bit_xor: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
-                    int index3 = code[cp + 3];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
+                    int index3 = Bytes.readUB(code, cp + 3);
                     registers[index3] = registers[index1] ^ registers[index2];
                     cp += 4;
                     break;
                 }
 
                 case bit_inv: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
                     registers[index2] = ~registers[index1];
                     cp += 3;
                     break;
                 }
 
                 case neg: {
-                    int index1 = code[cp + 1];
-                    int index2 = code[cp + 2];
+                    int index1 = Bytes.readUB(code, cp + 1);
+                    int index2 = Bytes.readUB(code, cp + 2);
                     registers[index2] = -registers[index1];
                     cp += 3;
                     break;
                 }
 
                 case load: {
-                    int constIndex = code[cp + 1];
-                    int index = code[cp + 2];
+                    int constIndex = Bytes.read2UB(code, cp + 1);
+                    int index = Bytes.readUB(code, cp + 3);
                     registers[index] = constantPool[constIndex];
-                    cp += 3;
+                    cp += 4;
                     break;
                 }
 
                 case reset: {
-                    int index = code[cp + 1];
+                    int index = Bytes.readUB(code, cp + 1);
                     registers[index] = 0;
                     cp += 2;
                     break;
                 }
 
                 case mov: {
-                    int index0 = code[cp + 1];
-                    int index1 = code[cp + 2];
+                    int index0 = Bytes.readUB(code, cp + 1);
+                    int index1 = Bytes.readUB(code, cp + 2);
                     registers[index1] = registers[index0];
                     cp += 3;
                     break;
                 }
 
                 case cmp_eq: {
-                    int index0 = code[cp + 1];
-                    int index1 = code[cp + 2];
+                    int index0 = Bytes.readUB(code, cp + 1);
+                    int index1 = Bytes.readUB(code, cp + 2);
                     flag = (registers[index0] == registers[index1]) ? 1 : 0;
                     cp += 3;
                     break;
                 }
 
                 case cmp_ne: {
-                    int index0 = code[cp + 1];
-                    int index1 = code[cp + 2];
+                    int index0 = Bytes.readUB(code, cp + 1);
+                    int index1 = Bytes.readUB(code, cp + 2);
                     flag = (registers[index0] != registers[index1]) ? 1 : 0;
                     cp += 3;
                     break;
                 }
 
                 case cmp_lt: {
-                    int index0 = code[cp + 1];
-                    int index1 = code[cp + 2];
+                    int index0 = Bytes.readUB(code, cp + 1);
+                    int index1 = Bytes.readUB(code, cp + 2);
                     flag = (registers[index0] < registers[index1]) ? 1 : 0;
                     cp += 3;
                     break;
                 }
 
                 case cmp_ge: {
-                    int index0 = code[cp + 1];
-                    int index1 = code[cp + 2];
+                    int index0 = Bytes.readUB(code, cp + 1);
+                    int index1 = Bytes.readUB(code, cp + 2);
                     flag = (registers[index0] >= registers[index1]) ? 1 : 0;
                     cp += 3;
                     break;
                 }
 
                 case cmp_gt: {
-                    int index0 = code[cp + 1];
-                    int index1 = code[cp + 2];
+                    int index0 = Bytes.readUB(code, cp + 1);
+                    int index1 = Bytes.readUB(code, cp + 2);
                     flag = (registers[index0] > registers[index1]) ? 1 : 0;
                     cp += 3;
                     break;
                 }
 
                 case cmp_le: {
-                    int index0 = code[cp + 1];
-                    int index1 = code[cp + 2];
+                    int index0 = Bytes.readUB(code, cp + 1);
+                    int index1 = Bytes.readUB(code, cp + 2);
                     flag = (registers[index0] <= registers[index1]) ? 1 : 0;
                     cp += 3;
                     break;
                 }
 
                 case jump: {
-                    cp = Bytes.read2ub(code, cp + 1);
+                    cp = Bytes.read2UB(code, cp + 1);
                     break;
                 }
 
                 case jmp_z: {
                     if (flag == 0) {
-                        cp = Bytes.read2ub(code, cp + 1);
+                        cp = Bytes.read2UB(code, cp + 1);
                         break;
                     }
                     cp += 3;
@@ -188,7 +188,7 @@ public class BytecodeInterpreter {
 
                 case jmp_nz: {
                     if (flag == 1) {
-                        cp = Bytes.read2ub(code, cp + 1);
+                        cp = Bytes.read2UB(code, cp + 1);
                         break;
                     }
                     cp += 3;
@@ -196,7 +196,7 @@ public class BytecodeInterpreter {
                 }
 
                 case _return: {
-                    int index = code[cp + 1];
+                    int index = Bytes.readUB(code, cp + 1);
                     return registers[index];
                 }
 
@@ -205,7 +205,7 @@ public class BytecodeInterpreter {
                 }
 
                 default: {
-                    int opcode = code[cp];
+                    int opcode = Bytes.readUB(code, cp);
                     throw new RuntimeException(
                             String.format("Illegal opcode: 0x%02x", opcode));
                 }

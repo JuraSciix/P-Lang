@@ -169,7 +169,7 @@ class Items {
 
         @Override
         ValueItem load(int index) {
-            code.emit2(load, constIndex, index);
+            code.emit2UBWithUB(load, constIndex, index);
             return valueItem(index);
         }
 

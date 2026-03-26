@@ -88,6 +88,12 @@ public class Code {
         emit2UB(argument);
     }
 
+    public void emit2UBWithUB(int opcode, int x, int y) {
+        emitUB(opcode);
+        emit2UB(x);
+        emitUB(y);
+    }
+
     public void emit2(int opcode, int a1, int a2) {
         emitUB(opcode);
         emitUB(a1);

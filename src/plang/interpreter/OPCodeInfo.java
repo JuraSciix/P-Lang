@@ -21,7 +21,7 @@ public class OPCodeInfo {
         INFO[neg] = info("neg", Param.INDEX, Param.INDEX);
 
         // Загружает значение из пула констант.
-        INFO[load] = info("load", Param.INDEX, Param.INDEX);
+        INFO[load] = info("load", Param.DOUBLE_INDEX, Param.INDEX);
 
         // Зануляет регистр/
         INFO[reset] = info("reset", Param.INDEX);
