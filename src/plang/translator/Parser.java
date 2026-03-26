@@ -70,6 +70,15 @@ public class Parser {
             return new If(tk.pos, expr, thenBody, elseBody);
         }
 
+        if (tk.hasType(WHILE)) {
+            reader.step();
+            expect(reader, LPAREN);
+            Expr expr = parseExpr(reader);
+            expect(reader, RPAREN);
+            Stmt body = parseStmt(reader);
+            return new While(tk.pos, expr, body);
+        }
+
         if (tk.hasType(RETURN)) {
             reader.step();
             Expr expr = null;

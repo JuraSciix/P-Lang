@@ -7,6 +7,7 @@ public interface Ast {
     class Visitor {
         public void visitCompound(Compound stmt) { visitStmt(stmt); }
         public void visitIf(If stmt) { visitStmt(stmt); }
+        public void visitWhile(While stmt) { visitStmt(stmt); }
         public void visitReturn(Return stmt) { visitStmt(stmt); }
         public void visitAsg(Asg stmt) { visitStmt(stmt); }
         public void visitBinaryOp(BinaryOp stmt) { visitStmt(stmt); }
@@ -58,6 +59,20 @@ public interface Ast {
 
         @Override
         public void accept(Visitor visitor) { visitor.visitIf(this); }
+    }
+
+    final class While extends Stmt {
+        public final Expr condition;
+        public final Stmt body;
+
+        public While(int pos, Expr condition, Stmt body) {
+            super(pos);
+            this.condition = condition;
+            this.body = body;
+        }
+
+        @Override
+        public void accept(Visitor visitor) { visitor.visitWhile(this); }
     }
 
     class Return extends Stmt {

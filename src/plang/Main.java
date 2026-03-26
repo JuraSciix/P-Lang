@@ -20,6 +20,10 @@ public class Main {
         LexerResult lexerResult = lexer.tokenize("test", str);
         ParserResult parserResult = parser.parse(lexerResult);
 
+        AstPrintVisitor printVisitor = new AstPrintVisitor();
+        parserResult.getStatements().forEach(stmt -> stmt.accept(printVisitor));
+        printVisitor.flush();
+
         Code code = new Code();
         Gen gen = new Gen(code);
         parserResult.getStatements().forEach(stmt -> stmt.accept(gen));

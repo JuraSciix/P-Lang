@@ -72,6 +72,11 @@ public class Gen extends Visitor {
     }
 
     @Override
+    public void visitWhile(While stmt) {
+        // todo
+    }
+
+    @Override
     public void visitReturn(Return stmt) {
         if (stmt.expr == null) {
             code.emit(leave);

@@ -24,6 +24,7 @@ public enum TokenType {
     GT_EQ,
 
     IF,
+    WHILE,
     ELSE,
     RETURN,
 

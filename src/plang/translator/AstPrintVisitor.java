@@ -55,6 +55,14 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
+    public void visitWhile(While stmt) {
+        output.println("WHILE (");
+        stmt.condition.accept(this);
+        output.println(")");
+        stmt.body.accept(this);
+    }
+
+    @Override
     public void visitReturn(Return tree) {
         if (tree.expr == null) {
             output.print("RETURN NONE");
