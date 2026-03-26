@@ -62,7 +62,10 @@ public class Code {
     }
 
     public void resolveJump(Jump jump) {
-        int cp = getCodePoint();
+        resolveJump(jump, getCodePoint());
+    }
+
+    public void resolveJump(Jump jump, int cp) {
         code.set(jump.cp + 1, (byte) cp);
         code.set(jump.cp + 2, (byte) (cp >> 8));
     }

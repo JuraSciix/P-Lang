@@ -73,7 +73,13 @@ public class Gen extends Visitor {
 
     @Override
     public void visitWhile(While stmt) {
-        // todo
+        int cp = code.getCodePoint();
+        CondItem cond = gen(stmt.condition).cond();
+        cond.resolveTrueJumps();
+        gen(stmt.body).dispose();
+        code.resolveJump(code.jump(jump), cp);
+        cond.resolveFalseJumps();
+        genItem = items.operItem();
     }
 
     @Override
