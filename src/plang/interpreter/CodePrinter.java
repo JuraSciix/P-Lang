@@ -9,15 +9,23 @@ public class CodePrinter {
     public void print(byte[] code) {
         int i = 0;
         while (i < code.length) {
-            int w = OPCodeInfo.weight(code[i]);
+            OPCodeInfo info = OPCodeInfo.info(code[i++]);
             stream.printf("%4d. ", i);
-            stream.print(OPCodeInfo.opcodeString(code[i]));
-            for (int j = 1; j < w; j++) {
+            stream.print(info.name);
+            for (OPCodeInfo.Param param : info.params) {
                 stream.print(' ');
-                stream.print(code[i + j]);
+                switch (param) {
+                    case INDEX:
+                        stream.print(code[i]);
+                        i++;
+                        break;
+                    case DOUBLE_INDEX:
+                        stream.print(Bytes.read2ub(code, i));
+                        i += 2;
+                        break;
+                }
             }
             stream.println();
-            i += w;
         }
     }
 }
