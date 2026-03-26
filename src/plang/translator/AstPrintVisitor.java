@@ -43,6 +43,18 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
+    public void visitIf(If tree) {
+        output.println("IF (");
+        tree.condition.accept(this);
+        output.println(")");
+        tree.thenBody.accept(this);
+        if (tree.elseBody != null) {
+            output.println("ELSE");
+            tree.elseBody.accept(this);
+        }
+    }
+
+    @Override
     public void visitReturn(Return tree) {
         if (tree.expr == null) {
             output.print("RETURN NONE");

@@ -6,6 +6,7 @@ public interface Ast {
 
     class Visitor {
         public void visitCompound(Compound stmt) { visitStmt(stmt); }
+        public void visitIf(If stmt) { visitStmt(stmt); }
         public void visitReturn(Return stmt) { visitStmt(stmt); }
         public void visitAsg(Asg stmt) { visitStmt(stmt); }
         public void visitBinaryOp(BinaryOp stmt) { visitStmt(stmt); }
@@ -41,6 +42,22 @@ public interface Ast {
         public void accept(Visitor visitor) {
             visitor.visitCompound(this);
         }
+    }
+
+    final class If extends Stmt {
+        public final Expr condition;
+        public final Stmt thenBody;
+        public final Stmt elseBody;
+
+        public If(int pos, Expr condition, Stmt thenBody, Stmt elseBody) {
+            super(pos);
+            this.condition = condition;
+            this.thenBody = thenBody;
+            this.elseBody = elseBody;
+        }
+
+        @Override
+        public void accept(Visitor visitor) { visitor.visitIf(this); }
     }
 
     class Return extends Stmt {

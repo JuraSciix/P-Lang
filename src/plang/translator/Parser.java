@@ -53,6 +53,23 @@ public class Parser {
             return new Compound(tk.pos, children);
         }
 
+        if (tk.hasType(IF)) {
+            reader.step();
+            expect(reader, LPAREN);
+            Expr expr = parseExpr(reader);
+            expect(reader, RPAREN);
+            Stmt thenBody = parseStmt(reader);
+            Stmt elseBody = null;
+            if (reader.hasRemaining()) {
+                Token tk1 = reader.currentToken();
+                if (tk1.hasType(ELSE)) {
+                    reader.step();
+                    elseBody = parseStmt(reader);
+                }
+            }
+            return new If(tk.pos, expr, thenBody, elseBody);
+        }
+
         if (tk.hasType(RETURN)) {
             reader.step();
             Expr expr = null;
