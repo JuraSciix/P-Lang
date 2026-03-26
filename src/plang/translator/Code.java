@@ -7,6 +7,14 @@ import java.util.Arrays;
 public class Code {
     private static final int MAX_REGISTERS = 256;
 
+    public static final class Jump {
+        final int cp;
+
+        Jump(int cp) {
+            this.cp = cp;
+        }
+    }
+
     private final ByteArrayBuilder code = new ByteArrayBuilder();
 
     private final boolean[] registerStates = new boolean[MAX_REGISTERS];
@@ -17,6 +25,46 @@ public class Code {
 
     public byte[] getByteArray() {
         return code.toArray();
+    }
+
+    public int allocReg() {
+        int index = freeReg();
+        captureReg(index);
+        return index;
+    }
+
+    private int freeReg() {
+        for (int i = 0; i < registerStates.length; i++) {
+            if (registerStates[i]) {
+                return i;
+            }
+        }
+
+        throw new RuntimeException("No free registers");
+    }
+
+    private void captureReg(int index) {
+        registerStates[index] = false;
+    }
+
+    public void releaseReg(int index) {
+        registerStates[index] = true;
+    }
+
+    public int getCodePoint() {
+        return code.size();
+    }
+
+    public Jump jump(int opcode) {
+        int cp = getCodePoint();
+        emitWith2UB(opcode, 0); // Резервируем место нулем
+        return new Jump(cp);
+    }
+
+    public void resolveJump(Jump jump) {
+        int cp = getCodePoint();
+        code.set(jump.cp + 1, (byte) cp);
+        code.set(jump.cp + 2, (byte) (cp >> 8));
     }
 
     public void emitPos(int pos) {
@@ -63,29 +111,5 @@ public class Code {
 
     public void emitUB(int value) {
         code.add((byte) value);
-    }
-
-    public int allocReg() {
-        int index = freeReg();
-        captureReg(index);
-        return index;
-    }
-
-    private int freeReg() {
-        for (int i = 0; i < registerStates.length; i++) {
-            if (registerStates[i]) {
-                return i;
-            }
-        }
-
-        throw new RuntimeException("No free registers");
-    }
-
-    private void captureReg(int index) {
-        registerStates[index] = false;
-    }
-
-    public void releaseReg(int index) {
-        registerStates[index] = true;
     }
 }

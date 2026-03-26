@@ -1,23 +1,24 @@
 package plang.translator;
 
 import plang.translator.Ast.*;
+import plang.translator.Code.Jump;
 import plang.translator.Items.*;
 
 import static plang.interpreter.OPCodeList.*;
 
 public class Gen extends Visitor {
     private final Code code;
-    private final Items items;
     private final LocalTable localTable;
     private final ConstTable constTable;
+    private final Items items;
     Item destItem;
     Item genItem;
 
     public Gen(Code code) {
         this.code = code;
-        items = new Items(code);
         localTable = new LocalTable();
         constTable = new ConstTable();
+        items = new Items(code, constTable);
     }
 
     public CodeData getData() {
@@ -55,7 +56,19 @@ public class Gen extends Visitor {
 
     @Override
     public void visitIf(If stmt) {
-        // todo
+        CondItem cond = gen(stmt.condition).cond();
+        cond.resolveTrueJumps();
+        gen(stmt.thenBody).dispose();
+        if (stmt.elseBody == null) {
+            cond.resolveFalseJumps();
+        } else {
+            // Съебываем
+            Jump leave = code.jump(jump);
+            cond.resolveFalseJumps();
+            gen(stmt.elseBody).dispose();
+            code.resolveJump(leave);
+        }
+        genItem = items.operItem();
     }
 
     @Override

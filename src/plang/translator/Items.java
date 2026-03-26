@@ -4,9 +4,11 @@ import static plang.interpreter.OPCodeList.*;
 
 class Items {
     private final Code code;
+    private final ConstTable constTable;
 
-    Items(Code code) {
+    Items(Code code, ConstTable constTable) {
         this.code = code;
+        this.constTable = constTable;
     }
 
     OpItem operItem() {
@@ -51,6 +53,16 @@ class Items {
 
         ValueItem acceptRight(Item item, Item destination) {
             throw new UnsupportedOperationException(getClass().getName());
+        }
+
+        CondItem cond() {
+            return cond(cmp_eq);
+        }
+
+        CondItem cond(int opcode) {
+            ValueItem item = load();
+            code.emitUnary(opcode, item.index, constItem(constTable.lookup(0)).load().index);
+            return new CondItem(opcode);
         }
     }
 
@@ -165,6 +177,32 @@ class Items {
             if (!(obj instanceof ConstItem)) return false;
             ConstItem other = (ConstItem) obj;
             return constIndex == other.constIndex;
+        }
+    }
+
+    class CondItem extends Item {
+        final int opcode;
+        Code.Jump falseJump = null;
+        Code.Jump trueJump = null;
+
+        CondItem(int opcode) {
+            this.opcode = opcode;
+        }
+
+        @Override
+        CondItem cond() {
+            return this;
+        }
+
+        void resolveTrueJumps() {
+            falseJump = code.jump(jmp_z);
+            if (trueJump != null) {
+                code.resolveJump(trueJump);
+            }
+        }
+
+        void resolveFalseJumps() {
+            code.resolveJump(falseJump);
         }
     }
 }

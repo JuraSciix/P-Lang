@@ -1,2 +1,6 @@
-a = 1 + 1
-return a
+a = 0
+if (a) {
+    return 10
+} else {
+    return 20
+}
