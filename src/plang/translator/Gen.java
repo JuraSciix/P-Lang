@@ -20,6 +20,13 @@ public class Gen extends Visitor {
         constTable = new ConstTable();
     }
 
+    public CodeData getData() {
+        return new CodeData(
+                code.getByteArray(),
+                constTable.getPoolArray()
+        );
+    }
+
     Item gen(Stmt stmt) {
         return gen(stmt, items.dynamicItem());
     }

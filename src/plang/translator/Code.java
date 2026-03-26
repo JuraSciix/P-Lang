@@ -20,7 +20,7 @@ public class Code {
         Arrays.fill(registerStates, true);
     }
 
-    public byte[] getCode() {
+    public byte[] getByteArray() {
         return code.toArray();
     }
 

@@ -1,10 +1,10 @@
-package plang.interpreter;
+package plang.translator;
 
-public final class ExecuteBlock {
+public final class CodeData {
     public final byte[] code;
     public final int[] constantPool;
 
-    public ExecuteBlock(byte[] code, int[] constantPool) {
+    public CodeData(byte[] code, int[] constantPool) {
         this.code = code;
         this.constantPool = constantPool;
     }

@@ -4,11 +4,11 @@ import static plang.interpreter.OPCodeList.*;
 
 public class BytecodeInterpreter {
 
-    public void run(Frame frame) {
-        int[] code = frame.block.code;
-        int cp = frame.cp;
+    public int run(ExecuteBlock block) {
+        byte[] code = block.code;
+        int cp = 0;
         int[] registers = new int[256];
-        int[] constantPool = frame.block.constantPool;
+        int[] constantPool = block.constantPool;
 
         while (true) {
             switch (code[cp]) {
@@ -108,15 +108,26 @@ public class BytecodeInterpreter {
                     break;
                 }
 
+                case mov: {
+                    int index0 = code[cp + 1];
+                    int index1 = code[cp + 2];
+                    registers[index1] = registers[index0];
+                    cp += 3;
+                    break;
+                }
+
                 case _return: {
-                    cp += 2;
-                    return;
+                    int index = code[cp + 1];
+                    return registers[index];
                 }
 
                 case leave: {
-                    cp += 1;
-                    return;
+                    return 0;
                 }
+
+                default:
+                    throw new RuntimeException("Illegal opcode: " +
+                            OPCodeInfo.opcodeString(code[cp]));
             }
         }
     }

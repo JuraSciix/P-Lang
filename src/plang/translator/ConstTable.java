@@ -5,10 +5,10 @@ import java.util.List;
 
 public final class ConstTable {
     private static class Entry {
-        final Object value;
+        final int value;
         final int index;
 
-        Entry(Object value, int index) {
+        Entry(int value, int index) {
             this.value = value;
             this.index = index;
         }
@@ -18,9 +18,9 @@ public final class ConstTable {
 
     private int counter = 0;
 
-    public int lookup(Object value) {
+    public int lookup(int value) {
         for (Entry entry : entries) {
-            if (value.equals(entry.value)) {
+            if (value == entry.value) {
                 return entry.index;
             }
         }
@@ -28,5 +28,13 @@ public final class ConstTable {
         int index = counter++;
         entries.add(new Entry(value, index));
         return index;
+    }
+
+    public int[] getPoolArray() {
+        int[] poolArray = new int[entries.size()];
+        for (int i = 0; i < poolArray.length; i++) {
+            poolArray[i] = entries.get(i).value;
+        }
+        return poolArray;
     }
 }

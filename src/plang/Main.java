@@ -1,6 +1,8 @@
 package plang;
 
+import plang.interpreter.BytecodeInterpreter;
 import plang.interpreter.CodePrinter;
+import plang.interpreter.ExecuteBlock;
 import plang.translator.*;
 import plang.utils.IOUtils;
 
@@ -23,6 +25,12 @@ public class Main {
         parserResult.getStatements().forEach(stmt -> stmt.accept(gen));
 
         CodePrinter codePrinter = new CodePrinter();
-        codePrinter.print(code.getCode());
+        codePrinter.print(code.getByteArray());
+
+        CodeData data = gen.getData();
+
+        BytecodeInterpreter interpreter = new BytecodeInterpreter();
+        int result = interpreter.run(new ExecuteBlock(data.code, data.constantPool));
+        System.out.println("Result: " + result);
     }
 }
