@@ -3,8 +3,6 @@ package plang.translator;
 import static plang.interpreter.OPCodeList.*;
 
 class Items {
-    static final int ANY = -1;
-
     private final Code code;
 
     Items(Code code) {
