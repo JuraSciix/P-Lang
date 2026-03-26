@@ -67,7 +67,7 @@ class Items {
         }
 
         ValueItem load(int index) {
-            return localItem(index);
+            return valueItem(index);
         }
     }
 
