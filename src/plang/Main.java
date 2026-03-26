@@ -3,6 +3,7 @@ package plang;
 import plang.interpreter.BytecodeInterpreter;
 import plang.interpreter.CodePrinter;
 import plang.interpreter.ExecuteBlock;
+import plang.interpreter.OPCodeList;
 import plang.translator.*;
 import plang.utils.IOUtils;
 
@@ -27,6 +28,7 @@ public class Main {
         Code code = new Code();
         Gen gen = new Gen(code);
         parserResult.getStatements().forEach(stmt -> stmt.accept(gen));
+        code.emit(OPCodeList.leave); // В конце всегда должна быть завершающая инструкция
 
         CodePrinter codePrinter = new CodePrinter();
         codePrinter.print(code.getByteArray());
