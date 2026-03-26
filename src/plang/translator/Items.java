@@ -52,10 +52,6 @@ class Items {
         ValueItem acceptRight(Item item, Item destination) {
             throw new UnsupportedOperationException(getClass().getName());
         }
-
-        CondItem toCond() {
-            return new CondItem();
-        }
     }
 
     class OpItem extends Item {
@@ -164,23 +160,6 @@ class Items {
             if (!(obj instanceof ConstItem)) return false;
             ConstItem other = (ConstItem) obj;
             return constIndex == other.constIndex;
-        }
-    }
-
-    class CondItem extends Item {
-        Code.Flow positiveCase;
-        Code.Flow negativeCase;
-
-        @Override
-        ValueItem load() {
-            int index = code.allocReg();
-            code.emitUnary(cmp_eq, 0, index);
-            return valueItem(index);
-        }
-
-        @Override
-        CondItem toCond() {
-            return this;
         }
     }
 }

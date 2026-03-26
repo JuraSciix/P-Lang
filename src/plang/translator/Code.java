@@ -1,16 +1,11 @@
 package plang.translator;
 
 import plang.utils.ByteArrayBuilder;
-import plang.utils.IntArrayBuilder;
 
 import java.util.Arrays;
 
 public class Code {
     private static final int MAX_REGISTERS = 256;
-
-    static final class Flow {
-        final IntArrayBuilder codePointers = new IntArrayBuilder();
-    }
 
     private final ByteArrayBuilder code = new ByteArrayBuilder();
 
@@ -62,7 +57,7 @@ public class Code {
         return index;
     }
 
-    public int freeReg() {
+    private int freeReg() {
         for (int i = 0; i < registerStates.length; i++) {
             if (registerStates[i]) {
                 return i;
@@ -72,30 +67,11 @@ public class Code {
         throw new RuntimeException("No free registers");
     }
 
-    public void captureReg(int index) {
+    private void captureReg(int index) {
         registerStates[index] = false;
     }
 
     public void releaseReg(int index) {
         registerStates[index] = true;
-    }
-
-    Flow newFlow(int opcode) {
-        int cp = code.size();
-        // Заготавливаем два байта под значение
-        emit2(opcode, 0, 0);
-        Flow flow = new Flow();
-        flow.codePointers.add(cp);
-        return flow;
-    }
-
-    void resolve(Flow flow) {
-        int cp = code.size();
-        int loByte = cp & 0xff;
-        int hiByte = (cp >> 8) & 0xff;
-        for (int i = 0; i < flow.codePointers.size(); i++) {
-            code.set(flow.codePointers.get(i) + 1, (byte) loByte);
-            code.set(flow.codePointers.get(i) + 2, (byte) hiByte);
-        }
     }
 }
