@@ -85,7 +85,6 @@ class Items {
 
         @Override
         ValueItem load(int index) {
-            if (this.index == index) return this;
             code.emit2(mov, this.index, index);
             return valueItem(index);
         }
@@ -114,6 +113,14 @@ class Items {
         LocalItem(int localIndex) {
             super(localIndex);
             this.localIndex = localIndex;
+        }
+
+        @Override
+        ValueItem load(int index) {
+            // Проверка на идентичность индексов должна проводиться только у переменных,
+            // чтобы выявить баги, связанные с ValueItem
+            if (index == localIndex) return this;
+            return super.load(index);
         }
 
         @Override
