@@ -58,7 +58,7 @@ public class Code {
 
     public int allocReg() {
         int index = freeReg();
-        registerStates[index] = false;
+        captureReg(index);
         return index;
     }
 
@@ -70,6 +70,10 @@ public class Code {
         }
 
         throw new RuntimeException("No free registers");
+    }
+
+    public void captureReg(int index) {
+        registerStates[index] = false;
     }
 
     public void releaseReg(int index) {
