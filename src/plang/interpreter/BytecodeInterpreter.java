@@ -9,6 +9,7 @@ public class BytecodeInterpreter {
         int cp = 0;
         int[] registers = new int[256];
         int[] constantPool = block.constantPool;
+        int flag = 0;
 
         while (0 <= cp && cp < code.length) {
             switch (code[cp]) {
@@ -108,10 +109,88 @@ public class BytecodeInterpreter {
                     break;
                 }
 
+                case reset: {
+                    int index = code[cp + 1];
+                    registers[index] = 0;
+                    cp += 2;
+                    break;
+                }
+
                 case mov: {
                     int index0 = code[cp + 1];
                     int index1 = code[cp + 2];
                     registers[index1] = registers[index0];
+                    cp += 3;
+                    break;
+                }
+
+                case cmp_eq: {
+                    int index0 = code[cp + 1];
+                    int index1 = code[cp + 2];
+                    flag = (registers[index0] == registers[index1]) ? 1 : 0;
+                    cp += 3;
+                    break;
+                }
+
+                case cmp_ne: {
+                    int index0 = code[cp + 1];
+                    int index1 = code[cp + 2];
+                    flag = (registers[index0] != registers[index1]) ? 1 : 0;
+                    cp += 3;
+                    break;
+                }
+
+                case cmp_lt: {
+                    int index0 = code[cp + 1];
+                    int index1 = code[cp + 2];
+                    flag = (registers[index0] < registers[index1]) ? 1 : 0;
+                    cp += 3;
+                    break;
+                }
+
+                case cmp_ge: {
+                    int index0 = code[cp + 1];
+                    int index1 = code[cp + 2];
+                    flag = (registers[index0] >= registers[index1]) ? 1 : 0;
+                    cp += 3;
+                    break;
+                }
+
+                case cmp_gt: {
+                    int index0 = code[cp + 1];
+                    int index1 = code[cp + 2];
+                    flag = (registers[index0] > registers[index1]) ? 1 : 0;
+                    cp += 3;
+                    break;
+                }
+
+                case cmp_le: {
+                    int index0 = code[cp + 1];
+                    int index1 = code[cp + 2];
+                    flag = (registers[index0] <= registers[index1]) ? 1 : 0;
+                    cp += 3;
+                    break;
+                }
+
+                case jump: {
+                    cp = Bytes.read2ub(code, cp + 1);
+                    break;
+                }
+
+                case jmp_z: {
+                    if (flag == 1) {
+                        cp = Bytes.read2ub(code, cp + 1);
+                        break;
+                    }
+                    cp += 3;
+                    break;
+                }
+
+                case jmp_nz: {
+                    if (flag == 0) {
+                        cp = Bytes.read2ub(code, cp + 1);
+                        break;
+                    }
                     cp += 3;
                     break;
                 }
@@ -125,9 +204,11 @@ public class BytecodeInterpreter {
                     return 0;
                 }
 
-                default:
-                    throw new RuntimeException("Illegal opcode: " +
-                            OPCodeInfo.opcodeString(code[cp]));
+                default: {
+                    int opcode = code[cp];
+                    throw new RuntimeException(
+                            String.format("Illegal opcode: 0x%02x", opcode));
+                }
             }
         }
 
