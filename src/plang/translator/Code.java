@@ -28,27 +28,41 @@ public class Code {
     }
 
     public void emit1(int opcode, int argument) {
-        code.add((byte) opcode);
-        code.add((byte) argument);
+        emitUB(opcode);
+        emitUB(argument);
+    }
+
+    public void emitWith2UB(int opcode, int argument) {
+        emitUB(opcode);
+        emit2UB(argument);
     }
 
     public void emit2(int opcode, int a1, int a2) {
-        code.add((byte) opcode);
-        code.add((byte) a1);
-        code.add((byte) a2);
+        emitUB(opcode);
+        emitUB(a1);
+        emitUB(a2);
     }
 
     public void emitUnary(int opcode, int index, int resultIndex) {
-        code.add((byte) opcode);
-        code.add((byte) index);
-        code.add((byte) resultIndex);
+        emitUB(opcode);
+        emitUB(index);
+        emitUB(resultIndex);
     }
 
     public void emitBinary(int opcode, int index1, int index2, int resultIndex) {
-        code.add((byte) opcode);
-        code.add((byte) index1);
-        code.add((byte) index2);
-        code.add((byte) resultIndex);
+        emitUB(opcode);
+        emitUB(index1);
+        emitUB(index2);
+        emitUB(resultIndex);
+    }
+
+    public void emit2UB(int value) {
+        emitUB(value);
+        emitUB(value >> 8);
+    }
+
+    public void emitUB(int value) {
+        code.add((byte) value);
     }
 
     public int allocReg() {
