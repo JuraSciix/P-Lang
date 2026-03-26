@@ -45,8 +45,10 @@ class Items {
         }
 
         ValueItem acceptLeft(Item item) {
-            int index = item.load().index;
-            return load(index);
+            ValueItem left = item.load();
+            load(left.index);
+            // Возвращаем left, чтобы сохранить свойство disposable.
+            return left;
         }
 
         ValueItem acceptRight(Item item, Item destination) {
@@ -130,9 +132,7 @@ class Items {
                 // Мы не можем позволить перезаписать себя
                 return super.acceptRight(item, destination);
             } else {
-                // Дизпоуз item.acceptLeft() возможен только через дизпоуз destination. Не наоборот.
-                int index = item.acceptLeft(destination).index;
-                return localItem(index);
+                return item.acceptLeft(destination);
             }
         }
     }
