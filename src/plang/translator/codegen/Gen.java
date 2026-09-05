@@ -1,8 +1,7 @@
 package plang.translator.codegen;
 
 import plang.translator.Ast.*;
-import plang.translator.codegen.Code.Jump;
-import plang.translator.codegen.Items.*;
+import plang.translator.codegen.Items.Item;
 
 import static plang.interpreter.OPCodeList.*;
 
@@ -11,8 +10,6 @@ public class Gen extends Visitor {
     private final LocalTable localTable;
     private final ConstTable constTable;
     private final Items items;
-    Item destItem;
-    Item genItem;
 
     public Gen(Code code) {
         this.code = code;
@@ -28,58 +25,42 @@ public class Gen extends Visitor {
         );
     }
 
+    Item resultItem;
+    Item destItem;
+
     Item gen(Stmt stmt) {
-        return gen(stmt, items.dynamicItem());
+        return gen(stmt, items.dynamic());
     }
 
-    Item gen(Stmt stmt, Item destination) {
-        Item prevDestItem = destItem;
-        Item prevGenItem = genItem;
+    Item gen(Stmt stmt, Item dest) {
+        Item presDest = destItem;
+        Item prevResult = resultItem;
 
         try {
-            destItem = destination;
+            destItem = dest;
             stmt.accept(this);
-            return genItem;
+            return resultItem;
         } finally {
-            destItem = prevDestItem;
-            genItem = prevGenItem;
+            destItem = presDest;
+            resultItem = prevResult;
         }
     }
 
     @Override
     public void visitCompound(Compound stmt) {
         for (Stmt child : stmt.children) {
-            gen(child).dispose();
+            child.accept(this);
         }
-        genItem = items.operItem();
     }
 
     @Override
     public void visitIf(If stmt) {
-        CondItem cond = gen(stmt.condition).cond();
-        cond.resolveTrueJumps();
-        gen(stmt.thenBody).dispose();
-        if (stmt.elseBody == null) {
-            cond.resolveFalseJumps();
-        } else {
-            // Съебываем
-            Jump leave = code.jump(jump);
-            cond.resolveFalseJumps();
-            gen(stmt.elseBody).dispose();
-            code.resolveJump(leave);
-        }
-        genItem = items.operItem();
+        // todo
     }
 
     @Override
     public void visitWhile(While stmt) {
-        int cp = code.getCodePoint();
-        CondItem cond = gen(stmt.condition).cond();
-        cond.resolveTrueJumps();
-        gen(stmt.body).dispose();
-        code.resolveJump(code.jump(jump), cp);
-        cond.resolveFalseJumps();
-        genItem = items.operItem();
+        // todo
     }
 
     @Override
@@ -87,11 +68,9 @@ public class Gen extends Visitor {
         if (stmt.expr == null) {
             code.emit(leave);
         } else {
-            ValueItem item = gen(stmt.expr).load();
-            code.emit1(_return, item.index);
+            Item item = gen(stmt.expr, items.direct());
+            code.emit1(_return, item.get());
         }
-
-        genItem = items.operItem();
     }
 
     @Override
@@ -104,41 +83,39 @@ public class Gen extends Visitor {
             localTable.register(stmt.name, index);
         }
 
-        LocalItem item = items.localItem(index);
-        gen(stmt.expr, item).load(index);
-
-        genItem = items.operItem();
+        gen(stmt.expr, items.stable(index));
     }
 
     @Override
     public void visitBinaryOp(BinaryOp stmt) {
-        ValueItem result = destItem.load();
-        ValueItem lhs = gen(stmt.lhs, result).acceptLeft(result.local());
-        ValueItem rhs = lhs.acceptRight(gen(stmt.rhs), result.local());
+        int opcode = AstInfo.opcodeFromTag(stmt.tag);
+        Item lhsItem = gen(stmt.lhs);
+        Item rhsItem = gen(stmt.rhs);
+
+        int lhsIndex = lhsItem.get();
+        int rhsIndex = rhsItem.get();
 
         code.emitPos(stmt.pos);
 
-        int opcode = AstInfo.opcodeFromTag(stmt.tag);
         if (AstInfo.isComparing(stmt.tag)) {
-            code.emit2(opcode, lhs.index, rhs.index);
-            genItem = items.condItem();
+            code.emit2(opcode, lhsIndex, rhsIndex);
+            resultItem = items.cond();
         } else {
-            code.emitBinary(opcode, lhs.index, rhs.index, result.index);
-            genItem = result;
+            Item dest = destItem.prepare();
+            code.emitBinary(opcode, lhsIndex, rhsIndex, dest.get());
+            resultItem = dest;
         }
-
-        lhs.dispose();
-        rhs.dispose();
     }
 
     @Override
     public void visitUnaryOp(UnaryOp stmt) {
-        ValueItem result = destItem.load();
-        ValueItem item = gen(stmt.expr, result).acceptLeft(result).load();
-        code.emitPos(stmt.pos);
-        code.emitUnary(AstInfo.opcodeFromTag(stmt.tag), item.index, result.index);
-        item.dispose();
-        genItem = result;
+        int opcode = AstInfo.opcodeFromTag(stmt.tag);
+        Item item = gen(stmt.expr);
+        int index = item.get();
+        Item dest = destItem.prepare();
+        code.emit(stmt.pos);
+        code.emitUnary(opcode, index, dest.get());
+        resultItem = dest;
     }
 
     @Override
@@ -146,20 +123,15 @@ public class Gen extends Visitor {
         switch (stmt.tag) {
             case VAR: {
                 String name = (String) stmt.value;
-                int localIndex = localTable.resolve(name);
-                genItem = items.localItem(localIndex);
+                resultItem = destItem.storeStable(localTable.resolve(name));
                 break;
             }
 
             case INT: {
-                int i = (int) stmt.value;
-                int constIndex = constTable.lookup(i);
-                genItem = items.constItem(constIndex);
+                int index = (int) stmt.value;
+                resultItem = destItem.storeConstant(constTable.lookup(index));
                 break;
             }
-
-            default:
-                throw new AssertionError(stmt.tag);
         }
     }
 

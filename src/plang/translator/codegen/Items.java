@@ -1,6 +1,7 @@
 package plang.translator.codegen;
 
-import static plang.interpreter.OPCodeList.*;
+import static plang.interpreter.OPCodeList.load;
+import static plang.interpreter.OPCodeList.mov;
 
 class Items {
     private final Code code;
@@ -11,227 +12,118 @@ class Items {
         this.constTable = constTable;
     }
 
-    OpItem operItem() {
-        return new OpItem();
-    }
-
-    DynamicItem dynamicItem() {
+    DynamicItem dynamic() {
         return new DynamicItem();
     }
 
-    ValueItem valueItem(int index) {
-        return new ValueItem(index);
+    StableItem stable(int index) {
+        return new StableItem(index);
     }
 
-    LocalItem localItem(int index) {
-        return new LocalItem(index);
+    DirectItem direct() {
+        return new DirectItem();
     }
 
-    ConstItem constItem(int constIndex) {
-        return new ConstItem(constIndex);
-    }
-
-    CondItem condItem() {
+    CondItem cond() {
         return new CondItem();
     }
 
-    abstract class Item {
-        ValueItem load() {
-            throw new UnsupportedOperationException();
-        }
-
-        ValueItem load(int index) {
-            throw new UnsupportedOperationException();
-        }
-
-        void dispose() {
-            // nop
-        }
-
-        ValueItem acceptLeft(Item item) {
-            ValueItem left = item.load();
-            load(left.index);
-            // Возвращаем left, чтобы сохранить свойство disposable.
-            return left;
-        }
-
-        ValueItem acceptRight(Item item, Item destination) {
+    abstract static class Item {
+        Item prepare() {
             throw new UnsupportedOperationException(getClass().getName());
         }
 
-        LocalItem local() {
-            ValueItem loaded = load();
-            return localItem(loaded.index);
+        int get() {
+            throw new UnsupportedOperationException();
         }
 
         CondItem cond() {
-            ValueItem item = load();
-            ValueItem zero = constItem(constTable.lookup(0)).load();
-            code.emitUnary(cmp_ne, item.index, zero.index);
-            item.dispose();
-            zero.dispose();
-            return new CondItem();
+            throw new UnsupportedOperationException();
         }
-    }
 
-    class OpItem extends Item {
-        // EMTPY
+        Item storeConstant(int index) {
+            return prepare().storeConstant(index);
+        }
+
+        Item storeStable(int index) {
+            return prepare().storeStable(index);
+        }
     }
 
     class DynamicItem extends Item {
-
-        ValueItem load() {
-            return load(code.allocReg());
-        }
-
-        ValueItem load(int index) {
-            return valueItem(index);
+        @Override
+        Item prepare() {
+            return new OneTimeItem();
         }
     }
 
-    class ValueItem extends Item {
+    class StableItem extends Item {
         final int index;
 
-        ValueItem(int index) {
+        protected StableItem(int index) {
             this.index = index;
         }
 
         @Override
-        ValueItem load() {
+        Item prepare() {
             return this;
         }
 
         @Override
-        ValueItem load(int index) {
-            if (index == this.index) return this;
-            code.emit2(mov, this.index, index);
-            return valueItem(index);
+        int get() {
+            return index;
         }
 
         @Override
-        void dispose() {
+        Item storeStable(int index) {
+            code.emit2(mov, index, this.index);
+            return this;
+        }
+
+        @Override
+        Item storeConstant(int index) {
+            code.emit2UBWithUB(load, index, this.index);
+            return this;
+        }
+    }
+
+    class OneTimeItem extends StableItem {
+        OneTimeItem() {
+            super(code.allocReg());
+        }
+
+        @Override
+        int get() {
             code.releaseReg(index);
-        }
-
-        @Override
-        ValueItem acceptRight(Item item, Item destination) {
-            return item.acceptLeft(dynamicItem());
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof ValueItem)) return false;
-            ValueItem other = (ValueItem) obj;
-            return index == other.index;
+            return super.get();
         }
     }
 
-    class LocalItem extends ValueItem {
-        final int localIndex;
+    class DirectItem extends DynamicItem {
 
-        LocalItem(int localIndex) {
-            super(localIndex);
-            this.localIndex = localIndex;
+        @Override
+        Item storeStable(int index) {
+            return new StableItem(index);
         }
 
         @Override
-        void dispose() {
-            // nope
-        }
-
-        @Override
-        ValueItem acceptLeft(Item item) {
-            return this;
-        }
-
-        @Override
-        ValueItem acceptRight(Item item, Item destination) {
-            if (equals(destination)) {
-                // Мы не можем позволить перезаписать себя
-                return super.acceptRight(item, destination);
-            } else {
-                return item.acceptLeft(destination);
-            }
+        Item storeConstant(int index) {
+            OneTimeItem item = new OneTimeItem();
+            code.emit2UBWithUB(load, index, item.index);
+            return item;
         }
     }
 
-    class ConstItem extends Item {
-        final int constIndex;
-
-        ConstItem(int constIndex) {
-            this.constIndex = constIndex;
-        }
-
-        @Override
-        ValueItem load() {
-            return load(code.allocReg());
-        }
-
-        @Override
-        ValueItem load(int index) {
-            code.emit2UBWithUB(load, constIndex, index);
-            return valueItem(index);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof ConstItem)) return false;
-            ConstItem other = (ConstItem) obj;
-            return constIndex == other.constIndex;
-        }
-    }
-
-    class CondItem extends Item {
-        final int opcode;
-        Code.Jump falseJump = null;
-        Code.Jump trueJump = null;
-
-        CondItem() {
-            this(jmp_z);
-        }
-
-        CondItem(int opcode) {
-            this.opcode = opcode;
-        }
-
-        @Override
-        ValueItem load() {
-            return load(code.allocReg());
-        }
-
-        @Override
-        ValueItem load(int index) {
-            Item zero = constItem(constTable.lookup(0));
-            Item one = constItem(constTable.lookup(1));
-
-            resolveTrueJumps();
-            one.load(index);
-            Code.Jump leave = code.jump(jump);
-            resolveFalseJumps();
-            zero.load(index);
-            code.resolveJump(leave);
-
-            return valueItem(index);
-        }
+    static class CondItem extends Item {
 
         @Override
         CondItem cond() {
             return this;
         }
 
-        CondItem negate() {
-            return new CondItem(OPCodes.negate(opcode));
-        }
-
-        void resolveTrueJumps() {
-            falseJump = code.jump(opcode);
-            if (trueJump != null) {
-                code.resolveJump(trueJump);
-            }
-        }
-
-        void resolveFalseJumps() {
-            code.resolveJump(falseJump);
+        @Override
+        int get() {
+            return 0; // todo
         }
     }
 }

@@ -51,18 +51,18 @@ public class Code {
         registerStates[index] = true;
     }
 
-    public int getCodePoint() {
+    public int codeTop() {
         return code.size();
     }
 
     public Jump jump(int opcode) {
-        int cp = getCodePoint();
+        int cp = codeTop();
         emitWith2UB(opcode, 0); // Резервируем место нулем
         return new Jump(cp);
     }
 
     public void resolveJump(Jump jump) {
-        resolveJump(jump, getCodePoint());
+        resolveJump(jump, codeTop());
     }
 
     public void resolveJump(Jump jump, int cp) {
