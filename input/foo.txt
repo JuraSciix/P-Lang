@@ -1,7 +1,0 @@
-// load 0 -> 0
-// load 1 -> 1
-// add 0 1 0
-
-a = 0;
-a = a + 1;
-return a;
