@@ -29,8 +29,8 @@ public class CodePrinter {
                         i++;
                         break;
                     case CONST_ID:
+                        // Печатаем сразу значение без префиксов
                         int constIndex = Bytes.read2UB(code, i);
-                        stream.print('%');
                         stream.print(constantPool[constIndex]);
                         i += 2;
                         break;
