@@ -35,10 +35,10 @@ public class Main {
         parserResult.getStatements().forEach(stmt -> stmt.accept(gen));
         emitter.emit(OPCodeList.leave); // В конце всегда должна быть завершающая инструкция
 
-        CodePrinter codePrinter = new CodePrinter();
-        codePrinter.print(emitter.getCodeArray());
-
         CodeData data = gen.getData();
+        CodePrinter codePrinter = new CodePrinter();
+        codePrinter.print(data.code, data.constantPool);
+
 
         BytecodeInterpreter interpreter = new BytecodeInterpreter();
         int result = interpreter.run(new ExecuteBlock(data.code, data.constantPool));

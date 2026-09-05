@@ -9,44 +9,44 @@ public class OPCodeInfo {
         INFO[nop] = info("nop");
 
         // Бинарные и унарные операции.
-        INFO[add] = info("add", Param.INDEX, Param.INDEX, Param.INDEX);
-        INFO[sub] = info("sub", Param.INDEX, Param.INDEX, Param.INDEX);
-        INFO[mul] = info("mul", Param.INDEX, Param.INDEX, Param.INDEX);
-        INFO[div] = info("div", Param.INDEX, Param.INDEX, Param.INDEX);
-        INFO[rem] = info("rem", Param.INDEX, Param.INDEX, Param.INDEX);
-        INFO[bit_and] = info("bit-and", Param.INDEX, Param.INDEX, Param.INDEX);
-        INFO[bit_or] = info("bit-or", Param.INDEX, Param.INDEX, Param.INDEX);
-        INFO[bit_xor] = info("bit-xor", Param.INDEX, Param.INDEX, Param.INDEX);
-        INFO[bit_inv] = info("bit-inv", Param.INDEX, Param.INDEX, Param.INDEX);
-        INFO[neg] = info("neg", Param.INDEX, Param.INDEX);
+        INFO[add] = info("add", Param.REG, Param.REG, Param.REG);
+        INFO[sub] = info("sub", Param.REG, Param.REG, Param.REG);
+        INFO[mul] = info("mul", Param.REG, Param.REG, Param.REG);
+        INFO[div] = info("div", Param.REG, Param.REG, Param.REG);
+        INFO[rem] = info("rem", Param.REG, Param.REG, Param.REG);
+        INFO[bit_and] = info("bit-and", Param.REG, Param.REG, Param.REG);
+        INFO[bit_or] = info("bit-or", Param.REG, Param.REG, Param.REG);
+        INFO[bit_xor] = info("bit-xor", Param.REG, Param.REG, Param.REG);
+        INFO[bit_inv] = info("bit-inv", Param.REG, Param.REG, Param.REG);
+        INFO[neg] = info("neg", Param.REG, Param.REG);
 
         // Загружает значение из пула констант.
-        INFO[load] = info("load", Param.DOUBLE_INDEX, Param.INDEX);
+        INFO[load] = info("load", Param.CONST_ID, Param.REG);
 
         // Зануляет регистр/
-        INFO[reset] = info("reset", Param.INDEX);
+        INFO[reset] = info("reset", Param.REG);
 
         // Копирует значение из левого регистра в правый.
-        INFO[mov] = info("mov", Param.INDEX, Param.INDEX);
+        INFO[mov] = info("mov", Param.REG, Param.REG);
 
         // Сравнивают два значения и переключают флаг.
-        INFO[cmp_eq] = info("cmp-eq", Param.INDEX, Param.INDEX);
-        INFO[cmp_ne] = info("cmp-ne", Param.INDEX, Param.INDEX);
-        INFO[cmp_lt] = info("cmp-lt", Param.INDEX, Param.INDEX);
-        INFO[cmp_ge] = info("cmp-ge", Param.INDEX, Param.INDEX);
-        INFO[cmp_gt] = info("cmp-gt", Param.INDEX, Param.INDEX);
-        INFO[cmp_le] = info("cmp-le", Param.INDEX, Param.INDEX);
+        INFO[cmp_eq] = info("cmp-eq", Param.REG, Param.REG);
+        INFO[cmp_ne] = info("cmp-ne", Param.REG, Param.REG);
+        INFO[cmp_lt] = info("cmp-lt", Param.REG, Param.REG);
+        INFO[cmp_ge] = info("cmp-ge", Param.REG, Param.REG);
+        INFO[cmp_gt] = info("cmp-gt", Param.REG, Param.REG);
+        INFO[cmp_le] = info("cmp-le", Param.REG, Param.REG);
 
         // Безусловный прыжок.
-        INFO[jump] = info("jump", Param.DOUBLE_INDEX);
+        INFO[jump] = info("jump", Param.BCI);
 
         // Условный прыжок, если флаг активен.
-        INFO[jmp_z] = info("jmp-z", Param.DOUBLE_INDEX);
+        INFO[jmp_z] = info("jmp-z", Param.BCI);
 
         // Условный прыжок, если флаг неактивен.
-        INFO[jmp_nz] = info("jmp-nz", Param.DOUBLE_INDEX);
+        INFO[jmp_nz] = info("jmp-nz", Param.BCI);
 
-        INFO[_return] = info("ret", Param.INDEX);
+        INFO[_return] = info("ret", Param.REG);
         INFO[leave] = info("leave");
     }
 
@@ -84,10 +84,10 @@ public class OPCodeInfo {
 
         for (Param param : params) {
             switch (param) {
-                case INDEX:
+                case REG:
                     w += 1;
                     break;
-                case DOUBLE_INDEX:
+                case BCI:
                     w += 2;
                     break;
             }
@@ -97,7 +97,8 @@ public class OPCodeInfo {
     }
 
     public enum Param {
-        INDEX, // 1 byte
-        DOUBLE_INDEX // 2 bytes
+        REG, // 1 byte
+        CONST_ID, // 2 bytes
+        BCI // 2 bytes
     }
 }
