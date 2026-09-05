@@ -7,20 +7,22 @@ import static plang.interpreter.OPCodeList.*;
 
 public class Gen extends Visitor {
     private final Code code;
+    private final CodeEmitter emitter;
     private final LocalTable localTable;
     private final ConstTable constTable;
     private final Items items;
 
-    public Gen(Code code) {
+    public Gen(Code code, CodeEmitter emitter) {
         this.code = code;
+        this.emitter = emitter;
         localTable = new LocalTable();
         constTable = new ConstTable();
-        items = new Items(code, constTable);
+        items = new Items(code, emitter, constTable);
     }
 
     public CodeData getData() {
         return new CodeData(
-                code.getByteArray(),
+                emitter.getCodeArray(),
                 constTable.getPoolArray()
         );
     }
@@ -66,10 +68,10 @@ public class Gen extends Visitor {
     @Override
     public void visitReturn(Return stmt) {
         if (stmt.expr == null) {
-            code.emit(leave);
+            emitter.emit(leave);
         } else {
             Item item = gen(stmt.expr, items.direct());
-            code.emit1(_return, item.get());
+            emitter.emit1(_return, item.get());
         }
     }
 
@@ -98,11 +100,11 @@ public class Gen extends Visitor {
         code.emitPos(stmt.pos);
 
         if (AstInfo.isComparing(stmt.tag)) {
-            code.emit2(opcode, lhsIndex, rhsIndex);
+            emitter.emit2(opcode, lhsIndex, rhsIndex);
             resultItem = items.cond();
         } else {
             Item dest = destItem.prepare();
-            code.emitBinary(opcode, lhsIndex, rhsIndex, dest.get());
+            emitter.emitBinary(opcode, lhsIndex, rhsIndex, dest.get());
             resultItem = dest;
         }
     }
@@ -113,8 +115,8 @@ public class Gen extends Visitor {
         Item item = gen(stmt.expr);
         int index = item.get();
         Item dest = destItem.prepare();
-        code.emit(stmt.pos);
-        code.emitUnary(opcode, index, dest.get());
+        emitter.emit(stmt.pos);
+        emitter.emitUnary(opcode, index, dest.get());
         resultItem = dest;
     }
 

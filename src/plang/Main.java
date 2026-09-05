@@ -7,6 +7,7 @@ import plang.interpreter.OPCodeList;
 import plang.translator.*;
 import plang.translator.codegen.Code;
 import plang.translator.codegen.CodeData;
+import plang.translator.codegen.CodeEmitter;
 import plang.translator.codegen.Gen;
 import plang.utils.IOUtils;
 
@@ -29,12 +30,13 @@ public class Main {
 //        printVisitor.flush();
 
         Code code = new Code();
-        Gen gen = new Gen(code);
+        CodeEmitter emitter = new CodeEmitter();
+        Gen gen = new Gen(code, emitter);
         parserResult.getStatements().forEach(stmt -> stmt.accept(gen));
-        code.emit(OPCodeList.leave); // В конце всегда должна быть завершающая инструкция
+        emitter.emit(OPCodeList.leave); // В конце всегда должна быть завершающая инструкция
 
         CodePrinter codePrinter = new CodePrinter();
-        codePrinter.print(code.getByteArray());
+        codePrinter.print(emitter.getCodeArray());
 
         CodeData data = gen.getData();
 

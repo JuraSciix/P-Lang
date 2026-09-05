@@ -5,10 +5,12 @@ import static plang.interpreter.OPCodeList.mov;
 
 class Items {
     private final Code code;
+    private final CodeEmitter emitter;
     private final ConstTable constTable;
 
-    Items(Code code, ConstTable constTable) {
+    Items(Code code, CodeEmitter emitter, ConstTable constTable) {
         this.code = code;
+        this.emitter = emitter;
         this.constTable = constTable;
     }
 
@@ -76,13 +78,13 @@ class Items {
 
         @Override
         Item storeStable(int index) {
-            code.emit2(mov, index, this.index);
+            emitter.emit2(mov, index, this.index);
             return this;
         }
 
         @Override
         Item storeConstant(int index) {
-            code.emit2UBWithUB(load, index, this.index);
+            emitter.emit2UBWithUB(load, index, this.index);
             return this;
         }
     }
@@ -109,7 +111,7 @@ class Items {
         @Override
         Item storeConstant(int index) {
             OneTimeItem item = new OneTimeItem();
-            code.emit2UBWithUB(load, index, item.index);
+            emitter.emit2UBWithUB(load, index, item.index);
             return item;
         }
     }
