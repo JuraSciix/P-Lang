@@ -59,12 +59,41 @@ public class Gen extends Visitor {
 
     @Override
     public void visitIf(If stmt) {
+        gen(stmt.condition);
 
+        emitter.emitWith2UB(jmp_z, 0);
+        int pc0 = emitter.top() - 2;
+
+        gen(stmt.thenBody);
+
+        if (stmt.elseBody == null) {
+            emitter.set2UB(pc0, emitter.top());
+        } else {
+            emitter.emitWith2UB(jump, 0);
+            int pc1 = emitter.top() - 2;
+
+            emitter.set2UB(pc0, emitter.top());
+
+            gen(stmt.elseBody);
+
+            emitter.set2UB(pc1, emitter.top());
+        }
     }
 
     @Override
     public void visitWhile(While stmt) {
-        // todo
+        int pc0 = emitter.top();
+
+        gen(stmt.condition);
+
+        emitter.emitWith2UB(jmp_z, 0);
+        int pc1 = emitter.top() - 2;
+
+        gen(stmt.body);
+
+        emitter.emitWith2UB(jump, pc0);
+
+        emitter.set2UB(pc1, emitter.top());
     }
 
     @Override

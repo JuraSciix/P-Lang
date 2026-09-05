@@ -60,4 +60,13 @@ public class CodeEmitter {
     public void emitUB(int value) {
         code.add((byte) value);
     }
+
+    public void setUB(int pc, int value) {
+        code.set(pc, (byte) value);
+    }
+
+    public void set2UB(int pc, int value) {
+        setUB(pc, value);
+        setUB(pc + 1, value >> 8);
+    }
 }

@@ -154,7 +154,6 @@ class Items {
      * Слот над логическим значением.
      */
     static class CondItem extends Item {
-
         @Override
         CondItem cond() {
             return this;
