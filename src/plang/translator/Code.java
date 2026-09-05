@@ -1,6 +1,6 @@
 package plang.translator;
 
-import plang.utils.ByteArrayBuilder;
+import plang.utils.ByteArrayList;
 
 import java.util.Arrays;
 
@@ -15,7 +15,7 @@ public class Code {
         }
     }
 
-    private final ByteArrayBuilder code = new ByteArrayBuilder();
+    private final ByteArrayList code = new ByteArrayList();
 
     private final boolean[] registerStates = new boolean[MAX_REGISTERS];
 
