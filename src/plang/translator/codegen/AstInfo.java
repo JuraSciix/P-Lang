@@ -1,4 +1,4 @@
-package plang.translator;
+package plang.translator.codegen;
 
 import plang.interpreter.OPCodeList;
 import plang.translator.Ast.Expr.Tag;

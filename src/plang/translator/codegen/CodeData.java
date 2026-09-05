@@ -1,4 +1,4 @@
-package plang.translator;
+package plang.translator.codegen;
 
 public final class CodeData {
     public final byte[] code;

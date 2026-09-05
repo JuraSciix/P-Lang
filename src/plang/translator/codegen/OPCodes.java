@@ -1,4 +1,4 @@
-package plang.translator;
+package plang.translator.codegen;
 
 class OPCodes {
 

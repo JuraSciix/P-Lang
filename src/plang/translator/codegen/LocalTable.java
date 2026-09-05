@@ -1,4 +1,4 @@
-package plang.translator;
+package plang.translator.codegen;
 
 import java.util.ArrayList;
 import java.util.List;

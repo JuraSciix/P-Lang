@@ -5,6 +5,9 @@ import plang.interpreter.CodePrinter;
 import plang.interpreter.ExecuteBlock;
 import plang.interpreter.OPCodeList;
 import plang.translator.*;
+import plang.translator.codegen.Code;
+import plang.translator.codegen.CodeData;
+import plang.translator.codegen.Gen;
 import plang.utils.IOUtils;
 
 import java.io.File;

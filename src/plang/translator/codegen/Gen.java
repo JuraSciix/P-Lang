@@ -1,8 +1,8 @@
-package plang.translator;
+package plang.translator.codegen;
 
 import plang.translator.Ast.*;
-import plang.translator.Code.Jump;
-import plang.translator.Items.*;
+import plang.translator.codegen.Code.Jump;
+import plang.translator.codegen.Items.*;
 
 import static plang.interpreter.OPCodeList.*;
 
