@@ -12,8 +12,6 @@ public class Lexer {
     private final Trie<TokenType> operators = new Trie<>();
     private final Map<String, TokenType> keywordMap = new HashMap<>();
 
-    private final StringBuilder buffer = new StringBuilder();
-
     public Lexer() {
         operators.put("+", TokenType.PLUS);
         operators.put("-", TokenType.MINUS);
@@ -41,6 +39,7 @@ public class Lexer {
 
     public LexResult tokenize(String sourceName, String str) {
         StringReader reader = new StringReader(str);
+        StringBuilder buffer = new StringBuilder();
 
         List<Token> tokens = new ArrayList<>();
         List<TokenData> tokensData = new ArrayList<>();
