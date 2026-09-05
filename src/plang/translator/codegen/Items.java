@@ -6,12 +6,10 @@ import static plang.interpreter.OPCodeList.mov;
 class Items {
     private final Code code;
     private final CodeEmitter emitter;
-    private final ConstTable constTable;
 
-    Items(Code code, CodeEmitter emitter, ConstTable constTable) {
+    Items(Code code, CodeEmitter emitter) {
         this.code = code;
         this.emitter = emitter;
-        this.constTable = constTable;
     }
 
     DynamicItem dynamic() {
