@@ -31,7 +31,7 @@ public class Gen extends Visitor {
     Item destItem;
 
     Item gen(Stmt stmt) {
-        return gen(stmt, items.dynamic());
+        return gen(stmt, items.direct());
     }
 
     Item gen(Stmt stmt, Item dest) {
@@ -70,7 +70,7 @@ public class Gen extends Visitor {
         if (stmt.expr == null) {
             emitter.emit(leave);
         } else {
-            Item item = gen(stmt.expr, items.direct());
+            Item item = gen(stmt.expr);
             emitter.emit1(_return, item.get());
         }
     }

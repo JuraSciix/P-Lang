@@ -12,10 +12,6 @@ class Items {
         this.emitter = emitter;
     }
 
-    DynamicItem dynamic() {
-        return new DynamicItem();
-    }
-
     StableItem stable(int index) {
         return new StableItem(index);
     }
@@ -47,13 +43,6 @@ class Items {
 
         Item storeStable(int index) {
             return prepare().storeStable(index);
-        }
-    }
-
-    class DynamicItem extends Item {
-        @Override
-        Item prepare() {
-            return new OneTimeItem();
         }
     }
 
@@ -99,7 +88,12 @@ class Items {
         }
     }
 
-    class DirectItem extends DynamicItem {
+    class DirectItem extends Item {
+
+        @Override
+        Item prepare() {
+            return new OneTimeItem();
+        }
 
         @Override
         Item storeStable(int index) {
