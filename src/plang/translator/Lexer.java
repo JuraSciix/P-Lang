@@ -1,6 +1,6 @@
 package plang.translator;
 
-import plang.utils.IntArrayBuilder;
+import plang.utils.IntArrayList;
 import plang.utils.Trie;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class Lexer {
 
         List<Token> tokens = new ArrayList<>();
         List<TokenData> tokensData = new ArrayList<>();
-        IntArrayBuilder lineStartPositions = new IntArrayBuilder();
+        IntArrayList lineStartPositions = new IntArrayList();
 
         while (reader.hasRemaining()) {
             int pos = reader.getPosition();
