@@ -60,21 +60,21 @@ class Items {
         /**
          * Присваивает в слот значение из пула констант.
          *
-         * @param index Индекс константы в пуле.
+         * @param constIndex Индекс константы в пуле.
          * @return Слот со значением константы.
          */
-        Item storeConstant(int index) {
-            return prepare().storeConstant(index);
+        Item storeConst(int constIndex) {
+            return prepare().storeConst(constIndex);
         }
 
         /**
          * Присваивает в слот значение из переменной.
          *
-         * @param index Индекс переменной.
+         * @param stableIndex Индекс переменной.
          * @return Слот со значением переменной.
          */
-        Item storeStable(int index) {
-            return prepare().storeStable(index);
+        Item storeStable(int stableIndex) {
+            return prepare().storeStable(stableIndex);
         }
     }
 
@@ -88,14 +88,14 @@ class Items {
         }
 
         @Override
-        Item storeStable(int index) {
-            return new StableItem(index);
+        Item storeStable(int stableIndex) {
+            return new StableItem(stableIndex);
         }
 
         @Override
-        Item storeConstant(int index) {
+        Item storeConst(int constIndex) {
             OneTimeItem item = new OneTimeItem();
-            emitter.emit2UBWithUB(load, index, item.index);
+            emitter.emit2UBWithUB(load, constIndex, item.index);
             return item;
         }
     }
@@ -121,14 +121,14 @@ class Items {
         }
 
         @Override
-        Item storeStable(int index) {
-            emitter.emit2(mov, index, this.index);
+        Item storeStable(int stableIndex) {
+            emitter.emit2(mov, stableIndex, index);
             return this;
         }
 
         @Override
-        Item storeConstant(int index) {
-            emitter.emit2UBWithUB(load, index, this.index);
+        Item storeConst(int constIndex) {
+            emitter.emit2UBWithUB(load, constIndex, index);
             return this;
         }
     }
@@ -140,12 +140,12 @@ class Items {
      */
     class OneTimeItem extends StableItem {
         OneTimeItem() {
-            super(code.allocReg());
+            super(code.acquire());
         }
 
         @Override
         int use() {
-            code.releaseReg(index);
+            code.release(index);
             return super.use();
         }
     }

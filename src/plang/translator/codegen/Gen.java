@@ -81,7 +81,7 @@ public class Gen extends Visitor {
         if (localTable.contains(stmt.name)) {
             index = localTable.resolve(stmt.name);
         } else {
-            index = code.allocReg();
+            index = code.acquire();
             localTable.register(stmt.name, index);
         }
 
@@ -96,8 +96,6 @@ public class Gen extends Visitor {
 
         int lhsIndex = lhsItem.use();
         int rhsIndex = rhsItem.use();
-
-        code.emitPos(stmt.pos);
 
         if (AstInfo.isComparing(stmt.tag)) {
             emitter.emit2(opcode, lhsIndex, rhsIndex);
@@ -115,7 +113,6 @@ public class Gen extends Visitor {
         Item item = gen(stmt.expr);
         int index = item.use();
         Item dest = destItem.prepare();
-        code.emitPos(stmt.pos);
         emitter.emitUnary(opcode, index, dest.index());
         resultItem = dest;
     }
@@ -131,7 +128,7 @@ public class Gen extends Visitor {
 
             case INT: {
                 int index = (int) stmt.value;
-                resultItem = destItem.storeConstant(constTable.lookup(index));
+                resultItem = destItem.storeConst(constTable.lookup(index));
                 break;
             }
         }

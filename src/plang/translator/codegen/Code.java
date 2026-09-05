@@ -5,38 +5,32 @@ import java.util.Arrays;
 public class Code {
     private static final int MAX_REGISTERS = 256;
 
-    private final boolean[] registerStates = new boolean[MAX_REGISTERS];
+    private final boolean[] freeness = new boolean[MAX_REGISTERS];
 
     public Code() {
-        Arrays.fill(registerStates, true);
+        Arrays.fill(freeness, true);
     }
 
-    public int allocReg() {
-        int index = freeReg();
-        captureReg(index);
+    public int acquire() {
+        int index = findFree();
+        freeness[index] = false;
         return index;
     }
 
-    private int freeReg() {
-        for (int i = 0; i < registerStates.length; i++) {
-            if (registerStates[i]) {
+    private int findFree() {
+        for (int i = 0; i < freeness.length; i++) {
+            if (freeness[i]) {
                 return i;
             }
         }
 
-        throw new RuntimeException("No free registers");
+        throw new AssertionError("No free registers");
     }
 
-    private void captureReg(int index) {
-        registerStates[index] = false;
-    }
-
-    public void releaseReg(int index) {
-        registerStates[index] = true;
-    }
-
-
-    public void emitPos(int pos) {
-
+    public void release(int index) {
+        if (freeness[index]) {
+            throw new AssertionError("Index " + index + " was already free");
+        }
+        freeness[index] = true;
     }
 }
