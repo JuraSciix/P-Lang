@@ -115,7 +115,7 @@ public class Gen extends Visitor {
         Item item = gen(stmt.expr);
         int index = item.use();
         Item dest = destItem.prepare();
-        emitter.emit(stmt.pos);
+        code.emitPos(stmt.pos);
         emitter.emitUnary(opcode, index, dest.index());
         resultItem = dest;
     }
