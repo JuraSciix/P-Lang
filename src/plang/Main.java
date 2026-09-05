@@ -19,7 +19,7 @@ public class Main {
         Lexer lexer = new Lexer();
         Parser parser = new Parser();
 
-        File file = new File(System.getProperty("user.dir"), "input/foo.txt");
+        File file = new File(System.getProperty("user.dir"), "input/foo.pl");
         String str = IOUtils.readFile(file);
 
         LexResult lexResult = lexer.tokenize("test", str);

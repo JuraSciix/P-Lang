@@ -29,8 +29,12 @@ class Items {
             throw new UnsupportedOperationException(getClass().getName());
         }
 
-        int get() {
+        int index() {
             throw new UnsupportedOperationException();
+        }
+
+        int use() {
+            return index();
         }
 
         CondItem cond() {
@@ -54,12 +58,17 @@ class Items {
         }
 
         @Override
+        int index() {
+            return index;
+        }
+
+        @Override
         Item prepare() {
             return this;
         }
 
         @Override
-        int get() {
+        int use() {
             return index;
         }
 
@@ -82,9 +91,9 @@ class Items {
         }
 
         @Override
-        int get() {
+        int use() {
             code.releaseReg(index);
-            return super.get();
+            return index();
         }
     }
 
@@ -116,7 +125,7 @@ class Items {
         }
 
         @Override
-        int get() {
+        int use() {
             return 0; // todo
         }
     }

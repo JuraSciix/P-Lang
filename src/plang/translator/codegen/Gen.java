@@ -71,7 +71,7 @@ public class Gen extends Visitor {
             emitter.emit(leave);
         } else {
             Item item = gen(stmt.expr);
-            emitter.emit1(_return, item.get());
+            emitter.emit1(_return, item.use());
         }
     }
 
@@ -94,8 +94,8 @@ public class Gen extends Visitor {
         Item lhsItem = gen(stmt.lhs);
         Item rhsItem = gen(stmt.rhs);
 
-        int lhsIndex = lhsItem.get();
-        int rhsIndex = rhsItem.get();
+        int lhsIndex = lhsItem.use();
+        int rhsIndex = rhsItem.use();
 
         code.emitPos(stmt.pos);
 
@@ -104,7 +104,7 @@ public class Gen extends Visitor {
             resultItem = items.cond();
         } else {
             Item dest = destItem.prepare();
-            emitter.emitBinary(opcode, lhsIndex, rhsIndex, dest.get());
+            emitter.emitBinary(opcode, lhsIndex, rhsIndex, dest.index());
             resultItem = dest;
         }
     }
@@ -113,10 +113,10 @@ public class Gen extends Visitor {
     public void visitUnaryOp(UnaryOp stmt) {
         int opcode = AstInfo.opcodeFromTag(stmt.tag);
         Item item = gen(stmt.expr);
-        int index = item.get();
+        int index = item.use();
         Item dest = destItem.prepare();
         emitter.emit(stmt.pos);
-        emitter.emitUnary(opcode, index, dest.get());
+        emitter.emitUnary(opcode, index, dest.index());
         resultItem = dest;
     }
 
