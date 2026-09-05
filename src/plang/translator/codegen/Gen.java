@@ -12,12 +12,17 @@ public class Gen extends Visitor {
     private final ConstTable constTable;
     private final Items items;
 
+    Item resultItem;
+    Item destItem;
+
     public Gen(Code code, CodeEmitter emitter) {
         this.code = code;
         this.emitter = emitter;
         localTable = new LocalTable();
         constTable = new ConstTable();
         items = new Items(code, emitter);
+
+        destItem = items.direct();
     }
 
     public CodeData getData() {
@@ -26,9 +31,6 @@ public class Gen extends Visitor {
                 constTable.getPoolArray()
         );
     }
-
-    Item resultItem;
-    Item destItem;
 
     Item gen(Stmt stmt) {
         return gen(stmt, items.direct());
@@ -57,7 +59,7 @@ public class Gen extends Visitor {
 
     @Override
     public void visitIf(If stmt) {
-        // todo
+
     }
 
     @Override
