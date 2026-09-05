@@ -4,11 +4,13 @@ import plang.utils.IntArrayList;
 import plang.utils.Trie;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Lexer {
     private final Trie<TokenType> operators = new Trie<>();
-    private final Trie<TokenType> keywords = new Trie<>();
+    private final Map<String, TokenType> keywordMap = new HashMap<>();
 
     private final StringBuilder buffer = new StringBuilder();
 
@@ -31,13 +33,13 @@ public class Lexer {
         operators.put(">=", TokenType.GT_EQ);
         operators.put(";", TokenType.SEP);
 
-        keywords.put("if", TokenType.IF);
-        keywords.put("else", TokenType.ELSE);
-        keywords.put("while", TokenType.WHILE);
-        keywords.put("return", TokenType.RETURN);
+        keywordMap.put("if", TokenType.IF);
+        keywordMap.put("else", TokenType.ELSE);
+        keywordMap.put("while", TokenType.WHILE);
+        keywordMap.put("return", TokenType.RETURN);
     }
 
-    public LexerResult tokenize(String sourceName, String str) {
+    public LexResult tokenize(String sourceName, String str) {
         StringReader reader = new StringReader(str);
 
         List<Token> tokens = new ArrayList<>();
@@ -203,8 +205,8 @@ public class Lexer {
                 String data = buffer.toString();
                 buffer.setLength(0);
 
-                if (keywords.contains(data)) {
-                    TokenType type = keywords.get(data);
+                if (keywordMap.containsKey(data)) {
+                    TokenType type = keywordMap.get(data);
                     tokens.add(new Token(pos, type));
                 } else {
                     tokens.add(new Token(pos, TokenType.IDENTIFIER));
@@ -219,6 +221,6 @@ public class Lexer {
         }
 
         LineNumberMap lineNumberMap = new LineNumberMap(lineStartPositions.toArray());
-        return new LexerResult(sourceName, lineNumberMap, tokens, tokensData);
+        return new LexResult(sourceName, lineNumberMap, tokens, tokensData);
     }
 }

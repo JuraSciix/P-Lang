@@ -18,8 +18,8 @@ public class Main {
         File file = new File(System.getProperty("user.dir"), "input/foo.txt");
         String str = IOUtils.readFile(file);
 
-        LexerResult lexerResult = lexer.tokenize("test", str);
-        ParserResult parserResult = parser.parse(lexerResult);
+        LexResult lexResult = lexer.tokenize("test", str);
+        ParserResult parserResult = parser.parse(lexResult);
 
 //        AstPrintVisitor printVisitor = new AstPrintVisitor();
 //        parserResult.getStatements().forEach(stmt -> stmt.accept(printVisitor));

@@ -3,14 +3,14 @@ package plang.translator;
 import java.util.Collections;
 import java.util.List;
 
-public final class LexerResult {
+public final class LexResult {
 
     private final String sourceName;
     private final LineNumberMap lineNumberMap;
     private final List<Token> tokens;
     private final List<TokenData> data;
 
-    public LexerResult(String sourceName, LineNumberMap lineNumberMap, List<Token> tokens, List<TokenData> data) {
+    public LexResult(String sourceName, LineNumberMap lineNumberMap, List<Token> tokens, List<TokenData> data) {
         this.sourceName = sourceName;
         this.lineNumberMap = lineNumberMap;
         this.tokens = tokens;

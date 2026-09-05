@@ -12,9 +12,9 @@ public class Parser {
 
     // Рекурсивный спуск: LR(1)
 
-    public ParserResult parse(LexerResult lexerResult) {
+    public ParserResult parse(LexResult lexResult) {
         List<Stmt> statements = new ArrayList<>();
-        TokenReader reader = new TokenReader(lexerResult.getTokens(), lexerResult.getData());
+        TokenReader reader = new TokenReader(lexResult.getTokens(), lexResult.getData());
 
         while (reader.hasRemaining()) {
             Token tk = reader.currentToken();
@@ -26,8 +26,8 @@ public class Parser {
         }
 
         return new ParserResult(
-                lexerResult.getSourceName(),
-                lexerResult.getLineNumberMap(),
+                lexResult.getSourceName(),
+                lexResult.getLineNumberMap(),
                 statements
         );
     }
