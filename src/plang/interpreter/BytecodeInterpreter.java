@@ -10,7 +10,7 @@ public final class BytecodeInterpreter {
     private static final int STATE_RETURN = 1;
 
     // Быстрая память.
-    private final long[] buffer = new long[256];
+    private static final ThreadLocal<long[]> buffer = ThreadLocal.withInitial(() -> new long[256]);
 
     /**
      *
@@ -23,7 +23,7 @@ public final class BytecodeInterpreter {
      */
     public int run(byte[] code, long[] pool, int cs, long[] arena, int off, int size) {
         int cp = cs & 0xffff;
-        long[] data = buffer;
+        long[] data = buffer.get();
         int flag = 0;
         int state = STATE_RUN;
         int returnAddress = 0;
@@ -74,7 +74,7 @@ public final class BytecodeInterpreter {
                 }
 
                 case load: {
-                    data[readUB(code, cp + 3)] = pool[off + read2UB(code, cp + 1)];
+                    data[readUB(code, cp + 3)] = pool[read2UB(code, cp + 1)];
                     cp += 4;
                     continue;
                 }
