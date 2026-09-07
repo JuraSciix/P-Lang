@@ -11,6 +11,10 @@ class Items {
         this.emitter = emitter;
     }
 
+    EmptyItem empty() {
+        return new EmptyItem();
+    }
+
     DirectItem direct() {
         return new DirectItem();
     }
@@ -75,6 +79,16 @@ class Items {
          */
         Item storeStable(int stableIndex) {
             throw new UnsupportedOperationException(getClass().getName());
+        }
+    }
+
+    /**
+     * Пустой предмет. Ничего не удерживает, ничего не освобождает.
+     */
+    class EmptyItem extends Item {
+        @Override
+        int use() {
+            return -1;
         }
     }
 

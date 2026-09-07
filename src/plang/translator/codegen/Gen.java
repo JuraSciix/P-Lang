@@ -56,17 +56,15 @@ public class Gen extends Visitor {
         for (Stmt child : stmt.children) {
             gen(child).use();
         }
+        resultItem = items.empty();
     }
 
     @Override
     public void visitIf(If stmt) {
         Items.CondItem cond = gen(stmt.condition).cond(null);
-
         emitter.emitBS(cond.opcode, 0);
         Mark m0 = emitter.mark(null);
-
         gen(stmt.thenBody).use();
-
         if (stmt.elseBody == null) {
             emitter.close(m0);
         } else {
@@ -76,6 +74,7 @@ public class Gen extends Visitor {
             gen(stmt.elseBody).use();
             emitter.close(m1);
         }
+        resultItem = items.empty();
     }
 
     @Override
@@ -87,6 +86,7 @@ public class Gen extends Visitor {
         gen(stmt.body).use();
         emitter.emitBS(jump, m0);
         emitter.close(m1);
+        resultItem = items.empty();
     }
 
     @Override
@@ -97,6 +97,7 @@ public class Gen extends Visitor {
             Item item = gen(stmt.expr);
             emitter.emitBB(_return, item.use());
         }
+        resultItem = items.empty();
     }
 
     @Override
@@ -109,7 +110,9 @@ public class Gen extends Visitor {
             localTable.register(stmt.name, index);
         }
 
-        gen(stmt.expr, items.stable(index));
+        Items.StableItem stable = items.stable(index);
+        gen(stmt.expr, stable);
+        resultItem = stable;
     }
 
     @Override
