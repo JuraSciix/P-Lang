@@ -1,4 +1,1 @@
-a = 1
-b = 0
-
-return a > 0 && b > 0
+return 2 * 3 + 1

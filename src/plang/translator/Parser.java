@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static plang.translator.ParseHelper.*;
 import static plang.translator.TokenType.*;
 
 public class Parser {
@@ -119,186 +120,31 @@ public class Parser {
     // Скобки
 
     private Expr parseExpr(TokenReader reader) {
-        return parseDis(reader);
+        return parseBinary(reader);
     }
 
-    private Expr parseDis(TokenReader reader) {
-        // Look-ahead
-        Expr lhs = parseCon(reader);
-
-        while (reader.hasRemaining()) {
-            Token tk = reader.currentToken();
-
-            if (tk.hasType(BARBAR)) {
-                reader.step();
-                Expr rhs = parseCon(reader);
-                lhs = new BinaryOp(tk.pos, Tag.DIS, lhs, rhs);
-                continue;
-            }
-
-            break;
-        }
-
-        return lhs;
-    }
-
-    private Expr parseCon(TokenReader reader) {
-        // Look-ahead
-        Expr lhs = parseEq(reader);
-
-        while (reader.hasRemaining()) {
-            Token tk = reader.currentToken();
-
-            if (tk.hasType(AMPAMP)) {
-                reader.step();
-                Expr rhs = parseEq(reader);
-                lhs = new BinaryOp(tk.pos, Tag.CON, lhs, rhs);
-                continue;
-            }
-
-            break;
-        }
-
-        return lhs;
-    }
-
-    private Expr parseEq(TokenReader reader) {
-        // Look-ahead
-        Expr lhs = parseNonEq(reader);
-
-        while (reader.hasRemaining()) {
-            Token tk = reader.currentToken();
-
-            if (tk.hasType(EQ)) {
-                reader.step();
-                Expr rhs = parseNonEq(reader);
-                lhs = new BinaryOp(tk.pos, Tag.CMP_EQ, lhs, rhs);
-                continue;
-            }
-
-            if (tk.hasType(NOT_EQ)) {
-                reader.step();
-                Expr rhs = parseNonEq(reader);
-                lhs = new BinaryOp(tk.pos, Tag.CMP_NE, lhs, rhs);
-                continue;
-            }
-
-            break;
-        }
-
-        return lhs;
-    }
-
-    private Expr parseNonEq(TokenReader reader) {
-        // Look-ahead
-        Expr lhs = parseAdd(reader);
-
-        while (reader.hasRemaining()) {
-            Token tk = reader.currentToken();
-
-            if (tk.hasType(LT)) {
-                reader.step();
-                Expr rhs = parseAdd(reader);
-                lhs = new BinaryOp(tk.pos, Tag.CMP_LT, lhs, rhs);
-                continue;
-            }
-
-            if (tk.hasType(LT_EQ)) {
-                reader.step();
-                Expr rhs = parseAdd(reader);
-                lhs = new BinaryOp(tk.pos, Tag.CMP_LE, lhs, rhs);
-                continue;
-            }
-
-            if (tk.hasType(GT)) {
-                reader.step();
-                Expr rhs = parseAdd(reader);
-                lhs = new BinaryOp(tk.pos, Tag.CMP_GT, lhs, rhs);
-                continue;
-            }
-
-            if (tk.hasType(GT_EQ)) {
-                reader.step();
-                Expr rhs = parseAdd(reader);
-                lhs = new BinaryOp(tk.pos, Tag.CMP_GE, lhs, rhs);
-                continue;
-            }
-
-            break;
-        }
-
-        return lhs;
-    }
-
-    private Expr parseAdd(TokenReader reader) {
-        // Look-ahead
-        Expr lhs = parseRem(reader);
-
-        while (reader.hasRemaining()) {
-            Token tk = reader.currentToken();
-
-            if (tk.hasType(PLUS)) {
-                reader.step();
-                Expr rhs = parseRem(reader);
-                lhs = new BinaryOp(tk.pos, Tag.ADD, lhs, rhs);
-                continue;
-            }
-
-            if (tk.hasType(MINUS)) {
-                reader.step();
-                Expr rhs = parseRem(reader);
-                lhs = new BinaryOp(tk.pos, Tag.SUB, lhs, rhs);
-                continue;
-            }
-
-            break;
-        }
-
-        return lhs;
-    }
-
-    private Expr parseRem(TokenReader reader) {
-        // Look-ahead
-        Expr lhs = parseMul(reader);
-
-        while (reader.hasRemaining()) {
-            Token tk = reader.currentToken();
-
-            if (tk.hasType(PERCENT)) {
-                reader.step();
-                Expr rhs = parseMul(reader);
-                lhs = new BinaryOp(tk.pos, Tag.REM, lhs, rhs);
-                continue;
-            }
-
-            break;
-        }
-
-        return lhs;
-    }
-
-    private Expr parseMul(TokenReader reader) {
+    private Expr parseBinary(TokenReader reader) {
         // Look-ahead
         Expr lhs = parseUnary(reader);
+        BinaryOp last = null;
 
         while (reader.hasRemaining()) {
             Token tk = reader.currentToken();
-
-            if (tk.hasType(STAR)) {
-                reader.step();
-                Expr rhs = parseUnary(reader);
-                lhs = new BinaryOp(tk.pos, Tag.MUL, lhs, rhs);
-                continue;
+            if (!isTokenTypeOfBinary(tk.type)) {
+                break;
             }
-
-            if (tk.hasType(SLASH)) {
-                reader.step();
-                Expr rhs = parseUnary(reader);
-                lhs = new BinaryOp(tk.pos, Tag.DIV, lhs, rhs);
-                continue;
+            reader.step();
+            Expr rhs = parseUnary(reader);
+            Tag tag = tagOf(tk.type);
+            if (last != null && precedence(last.tag) > precedence(tag)) {
+                // Перестраиваем дерево:
+                // (a + b) * c = a + (b * c)
+                BinaryOp newRhs = new BinaryOp(tk.pos, tag, last.rhs, rhs);
+                last = new BinaryOp(last.pos, last.tag, last.lhs, newRhs);
+            } else {
+                last = new BinaryOp(tk.pos, tag, lhs, rhs);
             }
-
-            break;
+            lhs = last;
         }
 
         return lhs;
