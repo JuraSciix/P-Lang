@@ -175,13 +175,13 @@ class Items {
         int use() {
             int index = dest.prepare().use();
             emitter.emitBS(opcode, 0);
-            int m0 = emitter.top() - 2;
+            Mark m0 = emitter.mark(null);
             emitter.emitBB(const_1, index);
             emitter.emitBS(jump, 0);
-            int m1 = emitter.top() - 2;
-            emitter.setTop(m0);
+            Mark m1 = emitter.mark(null);
+            emitter.close(m0);
             emitter.emitBB(const_0, index);
-            emitter.setTop(m1);
+            emitter.close(m1);
             return index;
         }
     }

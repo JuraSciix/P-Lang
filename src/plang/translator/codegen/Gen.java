@@ -62,18 +62,18 @@ public class Gen extends Visitor {
         Items.CondItem cond = gen(stmt.condition).cond(null);
 
         emitter.emitBS(cond.opcode, 0);
-        int m0 = emitter.top() - 2;
+        Mark m0 = emitter.mark(null);
 
         gen(stmt.thenBody);
 
         if (stmt.elseBody == null) {
-            emitter.setTop(m0);
+            emitter.close(m0);
         } else {
             emitter.emitBS(jump, 0);
-            int m1 = emitter.top() - 2;
-            emitter.setTop(m0);
+            Mark m1 = emitter.mark(null);
+            emitter.close(m0);
             gen(stmt.elseBody);
-            emitter.setTop(m1);
+            emitter.close(m1);
         }
     }
 
@@ -82,10 +82,10 @@ public class Gen extends Visitor {
         int m0 = emitter.top();
         Items.CondItem cond = gen(stmt.condition).cond(null);
         emitter.emitBS(cond.opcode, 0);
-        int m1 = emitter.top() - 2;
+        Mark m1 = emitter.mark(null);
         gen(stmt.body);
         emitter.emitBS(jump, m0);
-        emitter.setTop(m1);
+        emitter.close(m1);
     }
 
     @Override

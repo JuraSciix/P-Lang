@@ -60,7 +60,14 @@ public class CodeEmitter {
         code.set(index + 1, (byte) (value >> 8));
     }
 
-    public void setTop(int index) {
-        setShort(index, top());
+    public Mark mark(Mark prev) {
+        return new Mark(top() - 2, prev);
+    }
+
+    public void close(Mark mark) {
+        int t = top();
+        for (Mark m = mark; m != null; m = m.prev) {
+            setShort(m.index, t);
+        }
     }
 }
