@@ -1,43 +1,39 @@
 package plang.translator;
 
-import plang.utils.IntArrayList;
-import plang.utils.Trie;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static plang.translator.TokenType.*;
-import static plang.translator.TokenType.BANG;
-import static plang.translator.TokenType.IDENTIFIER;
-import static plang.translator.TokenType.INTEGER;
-import static plang.translator.TokenType.MINUS;
-import static plang.translator.TokenType.PLUS;
 
 public class Lexer {
-    private final Trie<TokenType> operators = new Trie<>();
+    private static boolean isDigit(int ch) {
+        return '0' <= ch && ch <= '9';
+    }
+
+    private static boolean isAlpha(int ch) {
+        return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z';
+    }
+
+    private static boolean isSpecial1(int ch) {
+        return ch == '$' || ch == '_';
+    }
+
+    private static boolean isSpecial2(int ch) {
+        switch (ch) {
+            case '+': case '-': case '*': case '/': case '%':
+            case '&': case '|': case '^': case '~':
+            case '<': case '>': case '=': case '!':
+                return true;
+            default:
+                return false;
+        }
+    }
+
     private final Map<String, TokenType> keywordMap = new HashMap<>();
 
     public Lexer() {
-        operators.put("+", PLUS);
-        operators.put("-", MINUS);
-        operators.put("*", STAR);
-        operators.put("/", SLASH);
-        operators.put("%", PERCENT);
-        operators.put("(", LPAREN);
-        operators.put(")", RPAREN);
-        operators.put("{", LBRACE);
-        operators.put("}", RBRACE);
-        operators.put("=", ASG);
-        operators.put("==", EQ);
-        operators.put("!=", NOT_EQ);
-        operators.put("<", LT);
-        operators.put("<=", LT_EQ);
-        operators.put(">", GT);
-        operators.put(">=", GT_EQ);
-        operators.put(";", SEP);
-
         keywordMap.put("if", IF);
         keywordMap.put("else", ELSE);
         keywordMap.put("while", WHILE);
@@ -50,213 +46,177 @@ public class Lexer {
 
         List<Token> tokens = new ArrayList<>();
         List<TokenData> tokensData = new ArrayList<>();
-        IntArrayList lineStartPositions = new IntArrayList();
 
         while (reader.hasRemaining()) {
             int pos = reader.getPosition();
-            char ch = reader.currentChar();
 
-            if (ch == '\n') {
-                reader.step();
-                lineStartPositions.add(reader.getPosition());
-                tokens.add(new Token(pos, TokenType.SEP));
-                continue;
-            }
-
-            if (ch == ' ' || ch == '\t' || ch == '\r') {
-                reader.step();
-                continue;
-            }
-
-            if (ch == '\\') {
-                // Перенос строки: \\ + \r?\n
-                reader.step();
-                if (reader.hasRemaining()) {
-                    char ch1 = reader.currentChar();
-                    boolean newline = false;
-                    if (ch1 == '\n') {
-                        reader.step();
-                        newline = true;
-                    }
-                    if (ch1 == '\r') {
-                        reader.step();
-                        if (reader.hasRemaining()) {
-                            ch1 = reader.currentChar();
-                            if (ch1 == '\n') {
-                                reader.step();
-                                newline = true;
-                            }
-                        }
-                    }
-                    if (newline) {
-                        continue;
-                    }
-                }
-
-                reader.stepBack();
-            }
-
-            // Особый случай
-            if (ch == '/') {
-                reader.step();
-                if (reader.hasRemaining()) {
-                    char ch1 = reader.currentChar();
-                    if (ch1 == '/') {
-                        reader.step();
-                        while (reader.hasRemaining()) {
-                            ch1 = reader.currentChar();
-                            reader.step();
-                            if (ch1 == '\n' || ch1 == '\r') {
-                                break;
-                            }
-                        }
-                        continue;
-                    }
-
-                    if (ch1 == '*') {
-                        // Ищем закрывающий тег
-                        boolean pending = true;
-                        reader.step();
-                        while (reader.hasRemaining()) {
-                            ch1 = reader.currentChar();
-                            reader.step();
-                            if (ch1 == '*' && reader.hasRemaining()) {
-                                ch1 = reader.currentChar();
-                                reader.step();
-                                if (ch1 == '/') {
-                                    pending = false;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (pending) {
-                            throw new IllegalArgumentException();
-                        }
-                        continue;
-                    }
-                }
-
-                // Возвращаемся назад!
-                reader.stepBack();
-            }
-
-            if (ch == '!') {
-                reader.step();
-                TokenType type = BANG;
-                if (reader.matches('=')) {
-                    type = NOT_EQ;
-                }
-                tokens.add(new Token(pos, type));
-                continue;
-            }
-
-            if (ch == '&') {
-                reader.step();
-                TokenType type = AMP;
-                if (reader.matches('&')) {
-                    type = AMPAMP;
-                }
-                tokens.add(new Token(pos, type));
-                continue;
-            }
-
-            if (ch == '|') {
-                reader.step();
-                TokenType type = BAR;
-                if (reader.matches('|')) {
-                    type = BARBAR;
-                }
-                tokens.add(new Token(pos, type));
-                continue;
-            }
-
-            if (ch == '0') {
-                // Числа с нуля (кроме самого нуля) начинаться не могут.
-                reader.step();
-                tokens.add(new Token(pos, INTEGER));
-                tokensData.add(new TokenData(pos, "0"));
-                continue;
-            }
-
-            if ('1' <= ch && ch <= '9') {
-                buffer.append(ch);
-                reader.step();
-                while (reader.hasRemaining()) {
-                    ch = reader.currentChar();
-                    if (ch == '_') {
-                        reader.step();
-                        if (reader.hasRemaining()) {
-                            char ch1 = reader.currentChar();
-                            if ('0' <= ch1 && ch1 <= '9') {
-                                continue;
-                            }
-                        }
-                        throw new IllegalArgumentException("Digit expected at " + reader.getPosition());
-                    }
-                    if (!('0' <= ch && ch <= '9')) {
-                        break;
-                    }
-                    buffer.append(ch);
+            switch (reader.currentChar()) {
+                case ' ': case '\t': case '\r':
                     reader.step();
-                }
-                String data = buffer.toString();
-                buffer.setLength(0);
-                tokens.add(new Token(pos, INTEGER));
-                tokensData.add(new TokenData(pos, data));
-                continue;
-            }
+                    break;
 
-            Trie.Node<TokenType> operatorNode = operators.findNode(ch);
-            if (operatorNode != null) {
-                Trie.Node<TokenType> n = operatorNode;
-                reader.step();
-                while (reader.hasRemaining()) {
-                    ch = reader.currentChar();
-                    operatorNode = n;
-                    n = n.findChild(ch);
-                    if (n == null) {
-                        break;
-                    }
+                case '\n':
                     reader.step();
-                }
+                    tokens.add(new Token(pos, SEP));
+                    break;
 
-                TokenType type = operatorNode.getValue();
-                tokens.add(new Token(pos, type));
-                continue;
-            }
+                // Межстрочное соединение
+                case '\\':
+                    afterBackslash(reader);
+                    break;
 
-            if (Character.isJavaIdentifierStart(ch)) {
-                buffer.append(ch);
-                reader.step();
-                while (reader.hasRemaining()) {
-                    ch = reader.currentChar();
-                    if (!Character.isJavaIdentifierPart(ch)) {
-                        break;
-                    }
-                    buffer.append(ch);
+                // Однострочный комментарий
+                case '#':
+                    afterGrid(reader);
+                    break;
+
+                case '0':
+                    // Числа с нуля (кроме самого нуля) начинаться не могут.
                     reader.step();
-                }
+                    tokens.add(new Token(pos, INTEGER));
+                    tokensData.add(new TokenData(pos, "0"));
+                    break;
 
-                String data = buffer.toString();
-                buffer.setLength(0);
+                case '(':
+                    reader.step();
+                    tokens.add(new Token(pos, LPAREN));
+                    break;
 
-                if (keywordMap.containsKey(data)) {
-                    TokenType type = keywordMap.get(data);
-                    tokens.add(new Token(pos, type));
-                } else {
-                    tokens.add(new Token(pos, IDENTIFIER));
-                    tokensData.add(new TokenData(pos, data));
-                }
+                case ')':
+                    reader.step();
+                    tokens.add(new Token(pos, RPAREN));
+                    break;
 
-                continue;
+                case '{':
+                    reader.step();
+                    tokens.add(new Token(pos, LBRACE));
+                    break;
+
+                case '}':
+                    reader.step();
+                    tokens.add(new Token(pos, RBRACE));
+                    break;
+
+                default:
+                    int ch = reader.currentChar();
+                    if (isDigit(ch)) {
+                        afterDigit(reader, buffer);
+                        tokens.add(new Token(pos, INTEGER));
+                        tokensData.add(new TokenData(pos, buffer.toString()));
+                        buffer.setLength(0); // clear
+                    } else if (isAlpha(ch) || isSpecial1(ch)) {
+                        afterIdentifierPart(reader, buffer);
+                        String data = buffer.toString();
+                        buffer.setLength(0); // clear
+                        if (keywordMap.containsKey(data)) {
+                            tokens.add(new Token(pos, keywordMap.get(data)));
+                        } else {
+                            tokens.add(new Token(pos, IDENTIFIER));
+                            tokensData.add(new TokenData(pos, data));
+                        }
+                    } else if (isSpecial2(ch)) {
+                        tokens.add(new Token(pos, afterSpecial2(reader)));
+                    } else {
+                        throw new IllegalArgumentException(
+                                String.format("Illegal character U+%04x", ch));
+                    }
             }
-
-            int codePoint = ch;
-            throw new IllegalArgumentException(String.format("Illegal character U+%04x", codePoint));
         }
 
-        LineNumberMap lineNumberMap = new LineNumberMap(lineStartPositions.toArray());
+        LineNumberMap lineNumberMap = new LineNumberMap(new int[0]); // todo
         return new LexResult(sourceName, lineNumberMap, tokens, tokensData);
+    }
+
+    private void afterBackslash(StringReader reader) {
+        // Текущий символ: обратный слеш
+        reader.step();
+
+        // После обратного слеша ожидаем увидеть только
+        // пробелы/табуляцию/перенос строки/перенос каретки.
+
+        boolean seeking = true;
+        while (reader.hasRemaining() && seeking) {
+            switch (reader.currentChar()) {
+                case '\n':
+                case '\r':
+                    seeking = false;
+                case ' ':
+                case '\t':
+                    reader.step();
+                    break;
+                default:
+                    throw new RuntimeException("Unexpected char after backslash");
+            }
+        }
+    }
+
+    private void afterGrid(StringReader reader) {
+        // Текущий символ: решетка
+        reader.step();
+
+        while (reader.hasRemaining()) {
+            if (reader.matches('\n')) {
+                break;
+            }
+            reader.step();
+        }
+    }
+
+    private TokenType afterSpecial2(StringReader reader) {
+        char ch = reader.currentChar();
+        reader.step();
+
+        switch (ch) {
+            case '+': return PLUS;
+            case '-': return MINUS;
+            case '*': return STAR;
+            case '/': return SLASH;
+            case '%': return PERCENT;
+            case '&': return reader.matches('&') ? AMPAMP : AMP;
+            case '|': return reader.matches('|') ? BARBAR : BAR;
+            case '!': return reader.matches('=') ? NOT_EQ : BANG;
+            case '=': return reader.matches('=') ? EQ : ASG;
+            case '>': return reader.matches('=') ? GT_EQ : GT;
+            case '<': return reader.matches('=') ? LT_EQ : LT;
+            default: throw new AssertionError(ch);
+        }
+    }
+
+    private void afterDigit(StringReader reader, StringBuilder buffer) {
+        buffer.append(reader.currentChar());
+        reader.step();
+
+        while (reader.hasRemaining()) {
+            char ch = reader.currentChar();
+            if (ch == '_') {
+                reader.step();
+                if (reader.hasRemaining() && isDigit(reader.currentChar())) {
+                    // Допускаем нижнее подчеркивание перед цифрой.
+                    continue;
+                }
+                throw new IllegalArgumentException("Underscore is not allowed here");
+            }
+            if (isDigit(ch)) {
+                buffer.append(ch);
+                reader.step();
+            } else {
+                break;
+            }
+        }
+    }
+
+    private void afterIdentifierPart(StringReader reader, StringBuilder buffer) {
+        buffer.append(reader.currentChar());
+        reader.step();
+
+        while (reader.hasRemaining()) {
+            char ch = reader.currentChar();
+            if (isAlpha(ch) || isSpecial1(ch) || isDigit(ch)) {
+                buffer.append(ch);
+                reader.step();
+            } else {
+                break;
+            }
+        }
     }
 }
