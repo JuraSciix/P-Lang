@@ -7,7 +7,7 @@ import static plang.interpreter.OPCodeList.*;
 
 public class BytecodeInterpreter {
 
-    public long run(ExecuteBlock block) {
+    public static long run(ExecuteBlock block) {
         byte[] code = block.code;
         int cp = 0;
         long[] registers = new long[256];

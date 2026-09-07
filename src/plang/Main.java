@@ -45,9 +45,14 @@ public class Main {
         CodePrinter codePrinter = new CodePrinter();
         codePrinter.print(data.code, data.constantPool);
 
+        int n = 1;
+        for (int i = 0; i < n; i++) {
+            long tx = System.nanoTime();
+            long result = BytecodeInterpreter.run(new ExecuteBlock(data.code, data.constantPool));
+            long ty = System.nanoTime();
 
-        BytecodeInterpreter interpreter = new BytecodeInterpreter();
-        long result = interpreter.run(new ExecuteBlock(data.code, data.constantPool));
-        System.out.println("Result: " + result);
+            long hs = (ty - tx) / 1000;
+            System.out.println("Executed in " + hs + " hs. Result: " + result);
+        }
     }
 }
