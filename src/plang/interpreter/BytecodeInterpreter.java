@@ -6,6 +6,8 @@ import static plang.interpreter.Bytes.readUB;
 import static plang.interpreter.OPCodeList.*;
 
 public class BytecodeInterpreter {
+    private static final int STATE_RUN = 0;
+    private static final int STATE_RETURN = 1;
 
     public static long run(ExecuteBlock block) {
         byte[] code = block.code;
@@ -13,8 +15,10 @@ public class BytecodeInterpreter {
         long[] registers = new long[256];
         long[] constantPool = block.constantPool;
         int flag = 0;
+        int state = STATE_RUN;
+        int returnAddress = 0;
 
-        while (0 <= cp && cp < code.length) {
+        while (state == STATE_RUN) {
             switch (readUB(code, cp)) {
                 case add: case sub:
                 case mul: case div: case rem:
@@ -120,27 +124,22 @@ public class BytecodeInterpreter {
 
                 case jmp_z:
                 case jmp_nz: {
+                    cp += 3;
                     if ((readUB(code, cp) == jmp_nz) ^ (flag == 0)) {
-                        cp = read2UB(code, cp + 1);
-                    } else {
-                        cp += 3;
+                        cp = read2UB(code, cp - 2);
                     }
                     continue;
                 }
 
-                case _return: {
-                    int index = readUB(code, cp + 1);
-                    return registers[index];
-                }
-
-                case leave: {
-                    return 0L;
-                }
+                case ret:
+                    state = STATE_RETURN;
+                    returnAddress = readUB(code, cp + 1);
+                    break;
 
                 default: throw new AssertionError("Illegal opcode");
             }
         }
 
-        return -1;
+        return registers[returnAddress];
     }
 }

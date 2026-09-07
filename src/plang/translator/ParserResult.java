@@ -8,12 +8,12 @@ import java.util.List;
 public final class ParserResult {
     private final String sourceName;
     private final LineNumberMap lineNumberMap;
-    private final List<Stmt> statements;
+    private final Ast.Compound ast;
 
-    public ParserResult(String sourceName, LineNumberMap lineNumberMap, List<Stmt> statements) {
+    public ParserResult(String sourceName, LineNumberMap lineNumberMap, Ast.Compound ast) {
         this.sourceName = sourceName;
         this.lineNumberMap = lineNumberMap;
-        this.statements = statements;
+        this.ast = ast;
     }
 
     public String getSourceName() {
@@ -24,7 +24,7 @@ public final class ParserResult {
         return lineNumberMap;
     }
 
-    public List<Stmt> getStatements() {
-        return Collections.unmodifiableList(statements);
+    public Ast.Compound getAst() {
+        return ast;
     }
 }

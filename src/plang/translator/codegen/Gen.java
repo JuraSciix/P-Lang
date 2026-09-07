@@ -20,7 +20,7 @@ public class Gen extends Visitor {
         this.emitter = emitter;
         localTable = new LocalTable();
         constTable = new ConstTable();
-        items = new Items(code, emitter);
+        items = new Items(code, emitter, constTable);
 
         destItem = items.direct();
     }
@@ -90,12 +90,8 @@ public class Gen extends Visitor {
 
     @Override
     public void visitReturn(Return stmt) {
-        if (stmt.expr == null) {
-            emitter.emitByte(leave);
-        } else {
-            Item item = gen(stmt.expr);
-            emitter.emitBB(_return, item.use());
-        }
+        Item item = (stmt.expr != null) ? gen(stmt.expr) : items.direct().storeConst(0L);
+        emitter.emitBB(ret, item.use());
         resultItem = items.empty();
     }
 
@@ -188,7 +184,7 @@ public class Gen extends Visitor {
 
             case INT: {
                 long value = (long) stmt.value;
-                resultItem = destItem.storeConst(constTable.lookup(value));
+                resultItem = destItem.storeConst(value);
                 break;
             }
         }

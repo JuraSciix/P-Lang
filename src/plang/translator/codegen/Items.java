@@ -5,10 +5,12 @@ import static plang.interpreter.OPCodeList.*;
 class Items {
     private final Code code;
     private final CodeEmitter emitter;
+    private final ConstTable constTable;
 
-    Items(Code code, CodeEmitter emitter) {
+    Items(Code code, CodeEmitter emitter, ConstTable constTable) {
         this.code = code;
         this.emitter = emitter;
+        this.constTable = constTable;
     }
 
     EmptyItem empty() {
@@ -63,10 +65,10 @@ class Items {
         /**
          * Присваивает в слот значение из пула констант.
          *
-         * @param constIndex Индекс константы в пуле.
+         * @param value Значение константы.
          * @return Слот со значением константы.
          */
-        Item storeConst(int constIndex) {
+        Item storeConst(long value) {
             throw new UnsupportedOperationException(getClass().getName());
         }
 
@@ -106,9 +108,13 @@ class Items {
         }
 
         @Override
-        Item storeConst(int constIndex) {
+        Item storeConst(long value) {
             OneTimeItem item = new OneTimeItem();
-            emitter.emitBSB(load, constIndex, item.index);
+            if (-1L <= value && value <= 2L) {
+                emitter.emitBB(const_0 + (int) value, item.index);
+            } else {
+                emitter.emitBSB(load, constTable.lookup(value), item.index);
+            }
             return item;
         }
     }
@@ -150,8 +156,12 @@ class Items {
         }
 
         @Override
-        Item storeConst(int constIndex) {
-            emitter.emitBSB(load, constIndex, index);
+        Item storeConst(long value) {
+            if (-1L <= value && value <= 2L) {
+                emitter.emitBB(const_0 + (int) value, index);
+            } else {
+                emitter.emitBSB(load, constTable.lookup(value), index);
+            }
             return this;
         }
     }

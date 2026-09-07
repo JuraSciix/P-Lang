@@ -51,8 +51,7 @@ public final class OPCodeInfo {
         // Условный прыжок, если флаг неактивен.
         INFO[jmp_nz] = make("jmp-nz", Param.BCI);
 
-        INFO[_return] = make("ret", Param.REG);
-        INFO[leave] = make("leave");
+        INFO[ret] = make("ret", Param.REG);
     }
 
     private static OPCodeInfo make(String name, Param... params) {

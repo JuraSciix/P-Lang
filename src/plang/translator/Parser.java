@@ -27,10 +27,12 @@ public class Parser {
             statements.add(parseStmt(reader));
         }
 
+        statements.add(new Return(0, null));
+
         return new ParserResult(
                 lexResult.getSourceName(),
                 lexResult.getLineNumberMap(),
-                Collections.singletonList(new Compound(0, statements))
+                new Compound(0, statements)
         );
     }
 

@@ -37,6 +37,5 @@ public interface OPCodeList {
     int jmp_z = 25;
     int jmp_nz = 26;
 
-    int _return = 27;
-    int leave = 28;
+    int ret = 27;
 }
