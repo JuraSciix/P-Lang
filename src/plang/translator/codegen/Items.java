@@ -42,12 +42,7 @@ class Items {
          * Превращает слот в логический.
          */
         CondItem cond(Item dest) {
-            int unitIndex = code.acquire();
-            int itemIndex = use();
-            emitter.emitBB(const_1, unitIndex);
-            emitter.emitBBB(cmp_eq, itemIndex, unitIndex);
-            code.release(unitIndex);
-            return new CondItem(jmp_z, dest);
+            throw new UnsupportedOperationException(getClass().getName());
         }
 
         /**
@@ -103,6 +98,16 @@ class Items {
         @Override
         Item prepare() {
             return new OneTimeItem();
+        }
+
+        @Override
+        CondItem cond(Item dest) {
+            int unitIndex = code.acquire();
+            int itemIndex = use();
+            emitter.emitBB(const_1, unitIndex);
+            emitter.emitBBB(cmp_eq, itemIndex, unitIndex);
+            code.release(unitIndex);
+            return new CondItem(jmp_z, dest);
         }
 
         @Override
