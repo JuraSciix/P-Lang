@@ -101,6 +101,14 @@ public class BytecodeInterpreter {
                     break;
                 }
 
+                case const_m1: case const_0:
+                case const_1: case const_2: {
+                    int index = Bytes.readUB(code, cp + 1);
+                    registers[index] = Bytes.readUB(code, cp) - const_0;
+                    cp += 2;
+                    break;
+                }
+
                 case load: {
                     int constIndex = Bytes.read2UB(code, cp + 1);
                     int index = Bytes.readUB(code, cp + 3);

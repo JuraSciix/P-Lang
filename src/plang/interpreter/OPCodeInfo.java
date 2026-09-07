@@ -20,6 +20,11 @@ public class OPCodeInfo {
         INFO[bit_inv] = info("bit-inv", Param.REG, Param.REG, Param.REG);
         INFO[neg] = info("neg", Param.REG, Param.REG);
 
+        INFO[const_m1] = info("const_m1", Param.REG);
+        INFO[const_0] = info("const_0", Param.REG);
+        INFO[const_1] = info("const_1", Param.REG);
+        INFO[const_2] = info("const_2", Param.REG);
+
         // Загружает значение из пула констант.
         INFO[load] = info("load", Param.CONST_ID, Param.REG);
 

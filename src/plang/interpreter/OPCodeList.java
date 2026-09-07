@@ -17,22 +17,26 @@ public interface OPCodeList {
     int bit_inv = 9;
     int neg = 10;
 
-    int load = 12;
-    int reset = 14;
-    int mov   = 15;
+    int const_m1 = 11;
+    int const_0 = 12;
+    int const_1 = 13;
+    int const_2 = 14;
 
-    int cmp_eq = 16;
-    int cmp_ne = 17;
-    int cmp_lt = 18;
-    int cmp_ge = 19;
-    int cmp_gt = 20;
-    int cmp_le = 21;
+    int load = 15;
+    int reset = 16;
+    int mov   = 17;
 
+    int cmp_eq = 18;
+    int cmp_ne = 19;
+    int cmp_lt = 20;
+    int cmp_ge = 21;
+    int cmp_gt = 22;
+    int cmp_le = 23;
 
-    int jump = 22;
-    int jmp_z = 23;
-    int jmp_nz = 24;
+    int jump = 24;
+    int jmp_z = 25;
+    int jmp_nz = 26;
 
-    int _return = 29;
-    int leave = 30;
+    int _return = 27;
+    int leave = 28;
 }

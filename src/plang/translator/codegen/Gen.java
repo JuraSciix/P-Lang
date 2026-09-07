@@ -59,8 +59,7 @@ public class Gen extends Visitor {
 
     @Override
     public void visitIf(If stmt) {
-        Items.CondItem cond = gen(stmt.condition).cond();
-
+        Items.CondItem cond = gen(stmt.condition).cond(null);
 
         emitter.emitBS(cond.opcode, 0);
         int pc0 = emitter.top() - 2;
@@ -85,7 +84,7 @@ public class Gen extends Visitor {
     public void visitWhile(While stmt) {
         int pc0 = emitter.top();
 
-        Items.CondItem cond = gen(stmt.condition).cond();
+        Items.CondItem cond = gen(stmt.condition).cond(null);
 
         emitter.emitBS(cond.opcode, 0);
         int pc1 = emitter.top() - 2;
@@ -131,7 +130,7 @@ public class Gen extends Visitor {
 
         if (AstInfo.isComparing(stmt.tag)) {
             emitter.emitBBB(opcode, lhsIndex, rhsIndex);
-            resultItem = items.cond(jmp_z);
+            resultItem = items.cond(destItem);
         } else {
             Item dest = destItem.prepare();
             emitter.emitBBBB(opcode, lhsIndex, rhsIndex, dest.index());
@@ -144,7 +143,7 @@ public class Gen extends Visitor {
         Item item = gen(stmt.expr);
         switch (stmt.tag) {
             case NOT:
-                resultItem = item.cond().negate();
+                resultItem = item.cond(destItem).negate();
                 break;
             case NEG:
                 int index = item.use();

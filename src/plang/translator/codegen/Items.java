@@ -19,14 +19,14 @@ class Items {
         return new StableItem(index);
     }
 
-    CondItem cond(int opcode) {
-        return new CondItem(opcode);
+    CondItem cond(Item dest) {
+        return new CondItem(jmp_z, dest);
     }
 
     /**
      * Слот - это функциональная единица для манипуляции регистрами.
      */
-    abstract static class Item {
+    abstract class Item {
         /**
          * Подготавливает слот к использованию. Может создаваться новый одноразовый слот.
          */
@@ -37,9 +37,9 @@ class Items {
         /**
          * Превращает слот в логический.
          */
-        CondItem cond() {
+        CondItem cond(Item dest) {
             use();
-            return new CondItem(jmp_z);
+            return new CondItem(jmp_z, dest);
         }
 
         /**
@@ -153,25 +153,38 @@ class Items {
     /**
      * Слот над логическим значением.
      */
-    static class CondItem extends Item {
+    class CondItem extends Item {
         final int opcode;
+        final Item dest;
 
-        CondItem(int opcode) {
+        CondItem(int opcode, Item dest) {
             this.opcode = opcode;
+            this.dest = dest;
         }
 
         CondItem negate() {
-            return new CondItem(OPCodes.negate(opcode));
+            return new CondItem(OPCodes.negate(opcode), dest);
         }
 
         @Override
-        CondItem cond() {
-            return this;
+        CondItem cond(Item dest) {
+            return dest != null ? new CondItem(opcode, dest) : this;
         }
 
         @Override
         int use() {
-            return 0; // todo
+            int index = dest.prepare().use();
+
+            emitter.emitBS(opcode, 0);
+            int pc0 = emitter.top() - 2;
+            emitter.emitBB(const_1, index);
+            emitter.emitBS(jump, 0);
+            int pc1 = emitter.top() - 2;
+            emitter.s(pc0, emitter.top());
+            emitter.emitBB(const_0, index);
+            emitter.s(pc1, emitter.top());
+
+            return index;
         }
     }
 }
