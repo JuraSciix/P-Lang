@@ -4,6 +4,7 @@ import plang.translator.Ast.*;
 import plang.translator.Ast.Expr.Tag;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static plang.translator.TokenType.*;
@@ -28,7 +29,7 @@ public class Parser {
         return new ParserResult(
                 lexResult.getSourceName(),
                 lexResult.getLineNumberMap(),
-                statements
+                Collections.singletonList(new Compound(0, statements))
         );
     }
 

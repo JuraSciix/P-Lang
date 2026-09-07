@@ -64,7 +64,7 @@ class Items {
          * @return Слот со значением константы.
          */
         Item storeConst(int constIndex) {
-            return prepare().storeConst(constIndex);
+            throw new UnsupportedOperationException(getClass().getName());
         }
 
         /**
@@ -74,7 +74,7 @@ class Items {
          * @return Слот со значением переменной.
          */
         Item storeStable(int stableIndex) {
-            return prepare().storeStable(stableIndex);
+            throw new UnsupportedOperationException(getClass().getName());
         }
     }
 

@@ -37,15 +37,16 @@ public class Gen extends Visitor {
     }
 
     Item gen(Stmt stmt, Item dest) {
-        Item presDest = destItem;
+        Item prevDest = destItem;
         Item prevResult = resultItem;
 
         try {
             destItem = dest;
+            resultItem = null;
             stmt.accept(this);
             return resultItem;
         } finally {
-            destItem = presDest;
+            destItem = prevDest;
             resultItem = prevResult;
         }
     }
@@ -53,7 +54,7 @@ public class Gen extends Visitor {
     @Override
     public void visitCompound(Compound stmt) {
         for (Stmt child : stmt.children) {
-            child.accept(this);
+            gen(child).use();
         }
     }
 
@@ -64,7 +65,7 @@ public class Gen extends Visitor {
         emitter.emitBS(cond.opcode, 0);
         Mark m0 = emitter.mark(null);
 
-        gen(stmt.thenBody);
+        gen(stmt.thenBody).use();
 
         if (stmt.elseBody == null) {
             emitter.close(m0);
@@ -72,7 +73,7 @@ public class Gen extends Visitor {
             emitter.emitBS(jump, 0);
             Mark m1 = emitter.mark(null);
             emitter.close(m0);
-            gen(stmt.elseBody);
+            gen(stmt.elseBody).use();
             emitter.close(m1);
         }
     }
@@ -83,7 +84,7 @@ public class Gen extends Visitor {
         Items.CondItem cond = gen(stmt.condition).cond(null);
         emitter.emitBS(cond.opcode, 0);
         Mark m1 = emitter.mark(null);
-        gen(stmt.body);
+        gen(stmt.body).use();
         emitter.emitBS(jump, m0);
         emitter.close(m1);
     }
@@ -156,8 +157,8 @@ public class Gen extends Visitor {
             }
 
             case INT: {
-                int index = (int) stmt.value;
-                resultItem = destItem.storeConst(constTable.lookup(index));
+                int value = (int) stmt.value;
+                resultItem = destItem.storeConst(constTable.lookup(value));
                 break;
             }
         }
