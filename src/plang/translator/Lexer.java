@@ -8,33 +8,40 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static plang.translator.TokenType.*;
+import static plang.translator.TokenType.BANG;
+import static plang.translator.TokenType.IDENTIFIER;
+import static plang.translator.TokenType.INTEGER;
+import static plang.translator.TokenType.MINUS;
+import static plang.translator.TokenType.PLUS;
+
 public class Lexer {
     private final Trie<TokenType> operators = new Trie<>();
     private final Map<String, TokenType> keywordMap = new HashMap<>();
 
     public Lexer() {
-        operators.put("+", TokenType.PLUS);
-        operators.put("-", TokenType.MINUS);
-        operators.put("*", TokenType.STAR);
-        operators.put("/", TokenType.SLASH);
-        operators.put("%", TokenType.PERCENT);
-        operators.put("(", TokenType.LPAREN);
-        operators.put(")", TokenType.RPAREN);
-        operators.put("{", TokenType.LBRACE);
-        operators.put("}", TokenType.RBRACE);
-        operators.put("=", TokenType.ASG);
-        operators.put("==", TokenType.EQ);
-        operators.put("!=", TokenType.NOT_EQ);
-        operators.put("<", TokenType.LT);
-        operators.put("<=", TokenType.LT_EQ);
-        operators.put(">", TokenType.GT);
-        operators.put(">=", TokenType.GT_EQ);
-        operators.put(";", TokenType.SEP);
+        operators.put("+", PLUS);
+        operators.put("-", MINUS);
+        operators.put("*", STAR);
+        operators.put("/", SLASH);
+        operators.put("%", PERCENT);
+        operators.put("(", LPAREN);
+        operators.put(")", RPAREN);
+        operators.put("{", LBRACE);
+        operators.put("}", RBRACE);
+        operators.put("=", ASG);
+        operators.put("==", EQ);
+        operators.put("!=", NOT_EQ);
+        operators.put("<", LT);
+        operators.put("<=", LT_EQ);
+        operators.put(">", GT);
+        operators.put(">=", GT_EQ);
+        operators.put(";", SEP);
 
-        keywordMap.put("if", TokenType.IF);
-        keywordMap.put("else", TokenType.ELSE);
-        keywordMap.put("while", TokenType.WHILE);
-        keywordMap.put("return", TokenType.RETURN);
+        keywordMap.put("if", IF);
+        keywordMap.put("else", ELSE);
+        keywordMap.put("while", WHILE);
+        keywordMap.put("return", RETURN);
     }
 
     public LexResult tokenize(String sourceName, String str) {
@@ -136,13 +143,9 @@ public class Lexer {
 
             if (ch == '!') {
                 reader.step();
-                TokenType type = TokenType.BANG;
-                if (reader.hasRemaining()) {
-                    char ch1 = reader.currentChar();
-                    if (ch1 == '=') {
-                        reader.step();
-                        type = TokenType.NOT_EQ;
-                    }
+                TokenType type = BANG;
+                if (reader.matches('=')) {
+                    type = NOT_EQ;
                 }
                 tokens.add(new Token(pos, type));
                 continue;
@@ -151,7 +154,7 @@ public class Lexer {
             if (ch == '0') {
                 // Числа с нуля (кроме самого нуля) начинаться не могут.
                 reader.step();
-                tokens.add(new Token(pos, TokenType.INTEGER));
+                tokens.add(new Token(pos, INTEGER));
                 tokensData.add(new TokenData(pos, "0"));
                 continue;
             }
@@ -179,7 +182,7 @@ public class Lexer {
                 }
                 String data = buffer.toString();
                 buffer.setLength(0);
-                tokens.add(new Token(pos, TokenType.INTEGER));
+                tokens.add(new Token(pos, INTEGER));
                 tokensData.add(new TokenData(pos, data));
                 continue;
             }
@@ -222,7 +225,7 @@ public class Lexer {
                     TokenType type = keywordMap.get(data);
                     tokens.add(new Token(pos, type));
                 } else {
-                    tokens.add(new Token(pos, TokenType.IDENTIFIER));
+                    tokens.add(new Token(pos, IDENTIFIER));
                     tokensData.add(new TokenData(pos, data));
                 }
 

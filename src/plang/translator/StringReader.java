@@ -21,6 +21,14 @@ public final class StringReader {
         return data[pos];
     }
 
+    public boolean matches(char ch) {
+        if (hasRemaining() && currentChar() == ch) {
+            step();
+            return true;
+        }
+        return false;
+    }
+
     public void step() {
         pos++;
     }
