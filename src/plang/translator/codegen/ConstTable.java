@@ -1,40 +1,31 @@
 package plang.translator.codegen;
 
-import java.util.ArrayList;
-import java.util.List;
+import plang.utils.LongArrayList;
 
 public final class ConstTable {
-    private static class Entry {
-        final long value;
-        final int index;
+    private final LongArrayList entries = new LongArrayList();
 
-        Entry(long value, int index) {
-            this.value = value;
-            this.index = index;
+    public int lookup(long value) {
+        int index = indexOf(value);
+        if (index >= 0) {
+            return index;
+        } else {
+            int nextIndex = entries.size();
+            entries.add(value);
+            return nextIndex;
         }
     }
 
-    private final List<Entry> entries = new ArrayList<>();
-
-    private int counter = 0;
-
-    public int lookup(long value) {
-        for (Entry entry : entries) {
-            if (value == entry.value) {
-                return entry.index;
+    public int indexOf(long value) {
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i) == value) {
+                return i;
             }
         }
-
-        int index = counter++;
-        entries.add(new Entry(value, index));
-        return index;
+        return -1;
     }
 
     public long[] getPoolArray() {
-        long[] poolArray = new long[entries.size()];
-        for (int i = 0; i < poolArray.length; i++) {
-            poolArray[i] = entries.get(i).value;
-        }
-        return poolArray;
+        return entries.toArray();
     }
 }
