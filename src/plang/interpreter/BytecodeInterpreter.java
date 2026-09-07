@@ -5,24 +5,31 @@ import static plang.interpreter.Bytes.read2UB;
 import static plang.interpreter.Bytes.readUB;
 import static plang.interpreter.OPCodeList.*;
 
-public class BytecodeInterpreter {
+public final class BytecodeInterpreter {
     private static final int STATE_RUN = 0;
     private static final int STATE_RETURN = 1;
+
+    // Быстрая память.
+    private final long[] buffer = new long[256];
 
     /**
      *
      * @param code Код программы
      * @param pool Пул констант.
-     * @param cs Откуда начнётся выполнение кода
-     * @param data Память (регистры)
-     * @param off Смещение в памяти.
+     * @param cs   Откуда начнётся выполнение кода
+     * @param arena Память (регистры)
+     * @param off  Смещение в памяти.
      * @return Адрес возврата
      */
-    public static int run(byte[] code, long[] pool, int cs, long[] data, int off) {
+    public int run(byte[] code, long[] pool, int cs, long[] arena, int off, int size) {
         int cp = cs & 0xffff;
+        long[] data = buffer;
         int flag = 0;
         int state = STATE_RUN;
         int returnAddress = 0;
+
+        // Переносим данные из общей памяти в быструю
+        System.arraycopy(arena, off, data, 0, size);
 
         while (state == STATE_RUN) {
             int opcode = readUB(code, cp);
@@ -30,9 +37,9 @@ public class BytecodeInterpreter {
                 case add: case sub:
                 case mul: case div: case rem:
                 case bit_and: case bit_or: case bit_xor: {
-                    long lhs = data[off + readUB(code, cp + 1)];
-                    long rhs = data[off + readUB(code, cp + 2)];
-                    int ri = off + readUB(code, cp + 3);
+                    long lhs = data[readUB(code, cp + 1)];
+                    long rhs = data[readUB(code, cp + 2)];
+                    int ri = readUB(code, cp + 3);
                     cp += 4;
                     switch (opcode) {
                         case add:     data[ri] = lhs + rhs; continue;
@@ -48,42 +55,42 @@ public class BytecodeInterpreter {
                 }
 
                 case bit_inv: {
-                    data[off + readUB(code, cp + 2)] = ~data[off + readUB(code, cp + 1)];
+                    data[readUB(code, cp + 2)] = ~data[readUB(code, cp + 1)];
                     cp += 3;
                     continue;
                 }
 
                 case neg: {
-                    data[off + readUB(code, cp + 2)] = -data[off + readUB(code, cp + 1)];
+                    data[readUB(code, cp + 2)] = -data[readUB(code, cp + 1)];
                     cp += 3;
                     continue;
                 }
 
                 case const_m1: case const_0:
                 case const_1: case const_2: {
-                    data[off + readUB(code, cp + 1)] = opcode - const_0;
+                    data[readUB(code, cp + 1)] = opcode - const_0;
                     cp += 2;
                     continue;
                 }
 
                 case load: {
-                    data[off + readUB(code, cp + 3)] = pool[off + read2UB(code, cp + 1)];
+                    data[readUB(code, cp + 3)] = pool[off + read2UB(code, cp + 1)];
                     cp += 4;
                     continue;
                 }
 
                 case mov: {
-                    data[off + readUB(code, cp + 2)] = data[off + readUB(code, cp + 1)];
+                    data[readUB(code, cp + 2)] = data[readUB(code, cp + 1)];
                     cp += 3;
                     continue;
                 }
 
-                case cmp_eq:case cmp_ne:
+                case cmp_eq: case cmp_ne:
                 case cmp_le: case cmp_lt:
                 case cmp_ge: case cmp_gt: {
                     flag = (opcode == cmp_ne) ^ compare(
-                            data[off + readUB(code, cp + 1)],
-                            data[off + readUB(code, cp + 2)],
+                            data[readUB(code, cp + 1)],
+                            data[readUB(code, cp + 2)],
                             opcode == cmp_ne || opcode == cmp_eq || opcode == cmp_ge || opcode == cmp_le,
                             opcode == cmp_ge || opcode == cmp_gt,
                             opcode == cmp_le || opcode == cmp_lt) ? 1 : 0;
@@ -96,8 +103,7 @@ public class BytecodeInterpreter {
                     continue;
                 }
 
-                case jmp_z:
-                case jmp_nz: {
+                case jmp_z: case jmp_nz: {
                     cp += 3;
                     if ((opcode == jmp_nz) ^ (flag == 0)) {
                         cp = read2UB(code, cp - 2);
@@ -113,6 +119,9 @@ public class BytecodeInterpreter {
                 default: throw new AssertionError("Illegal opcode");
             }
         }
+
+        // Переносим данные из быстрой памяти в общую
+        System.arraycopy(data, 0, arena, off, size);
 
         return returnAddress;
     }

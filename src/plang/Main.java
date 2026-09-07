@@ -43,11 +43,12 @@ public class Main {
         codePrinter.print(data.code, data.constantPool);
 
         long[] memoryData = new long[256];
+        BytecodeInterpreter interpreter = new BytecodeInterpreter();
 
         int n = 1000;
         for (int i = 0; i < n; i++) {
             long tx = System.nanoTime();
-            int result = BytecodeInterpreter.run(data.code, data.constantPool, 0, memoryData, 0);
+            int result = interpreter.run(data.code, data.constantPool, 0, memoryData, 0, 10);
             long ty = System.nanoTime();
 
             long hs = (ty - tx) / 1000;
