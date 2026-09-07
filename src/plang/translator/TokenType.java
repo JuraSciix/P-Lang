@@ -22,6 +22,10 @@ public enum TokenType {
     LT_EQ,
     GT,
     GT_EQ,
+    AMP,
+    AMPAMP,
+    BAR,
+    BARBAR,
 
     IF,
     WHILE,

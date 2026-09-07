@@ -151,6 +151,26 @@ public class Lexer {
                 continue;
             }
 
+            if (ch == '&') {
+                reader.step();
+                TokenType type = AMP;
+                if (reader.matches('&')) {
+                    type = AMPAMP;
+                }
+                tokens.add(new Token(pos, type));
+                continue;
+            }
+
+            if (ch == '|') {
+                reader.step();
+                TokenType type = BAR;
+                if (reader.matches('|')) {
+                    type = BARBAR;
+                }
+                tokens.add(new Token(pos, type));
+                continue;
+            }
+
             if (ch == '0') {
                 // Числа с нуля (кроме самого нуля) начинаться не могут.
                 reader.step();
