@@ -13,7 +13,7 @@ public class CodePrinter {
         this.stream = stream;
     }
 
-    public void print(byte[] code, int[] constantPool) {
+    public void print(byte[] code, long[] constantPool) {
         int i = 0;
         while (i < code.length) {
             OPCodeInfo info = OPCodeInfo.info(Bytes.readUB(code, i));

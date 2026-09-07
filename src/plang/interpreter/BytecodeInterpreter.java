@@ -4,11 +4,11 @@ import static plang.interpreter.OPCodeList.*;
 
 public class BytecodeInterpreter {
 
-    public int run(ExecuteBlock block) {
+    public long run(ExecuteBlock block) {
         byte[] code = block.code;
         int cp = 0;
-        int[] registers = new int[256];
-        int[] constantPool = block.constantPool;
+        long[] registers = new long[256];
+        long[] constantPool = block.constantPool;
         int flag = 0;
 
         while (0 <= cp && cp < code.length) {

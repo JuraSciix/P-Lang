@@ -187,7 +187,7 @@ public class Gen extends Visitor {
             }
 
             case INT: {
-                int value = (int) stmt.value;
+                long value = (long) stmt.value;
                 resultItem = destItem.storeConst(constTable.lookup(value));
                 break;
             }

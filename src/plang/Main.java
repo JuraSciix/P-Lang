@@ -41,7 +41,7 @@ public class Main {
 
 
         BytecodeInterpreter interpreter = new BytecodeInterpreter();
-        int result = interpreter.run(new ExecuteBlock(data.code, data.constantPool));
+        long result = interpreter.run(new ExecuteBlock(data.code, data.constantPool));
         System.out.println("Result: " + result);
     }
 }
