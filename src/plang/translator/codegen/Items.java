@@ -1,7 +1,6 @@
 package plang.translator.codegen;
 
-import static plang.interpreter.OPCodeList.load;
-import static plang.interpreter.OPCodeList.mov;
+import static plang.interpreter.OPCodeList.*;
 
 class Items {
     private final Code code;
@@ -20,8 +19,8 @@ class Items {
         return new StableItem(index);
     }
 
-    CondItem cond() {
-        return new CondItem();
+    CondItem cond(int opcode) {
+        return new CondItem(opcode);
     }
 
     /**
@@ -39,7 +38,8 @@ class Items {
          * Превращает слот в логический.
          */
         CondItem cond() {
-            throw new UnsupportedOperationException(getClass().getName());
+            use();
+            return new CondItem(jmp_z);
         }
 
         /**
@@ -154,6 +154,16 @@ class Items {
      * Слот над логическим значением.
      */
     static class CondItem extends Item {
+        final int opcode;
+
+        CondItem(int opcode) {
+            this.opcode = opcode;
+        }
+
+        CondItem negate() {
+            return new CondItem(OPCodes.negate(opcode));
+        }
+
         @Override
         CondItem cond() {
             return this;

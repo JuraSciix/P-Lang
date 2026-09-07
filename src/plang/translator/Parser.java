@@ -268,8 +268,14 @@ public class Parser {
 
         if (tk.hasType(MINUS)) {
             reader.step();
-            Expr expr = parseLowest(reader);
+            Expr expr = parseUnary(reader);
             return new UnaryOp(tk.pos, Tag.NEG, expr);
+        }
+
+        if (tk.hasType(BANG)) {
+            reader.step();
+            Expr expr = parseUnary(reader);
+            return new UnaryOp(tk.pos, Tag.NOT, expr);
         }
 
         return parseLowest(reader);

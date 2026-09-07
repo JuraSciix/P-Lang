@@ -115,6 +115,7 @@ public interface Ast {
             BIT_OR,
             BIT_XOR,
             BIT_INV,
+            NOT,
             NEG,
             CMP_EQ,
             CMP_NE,

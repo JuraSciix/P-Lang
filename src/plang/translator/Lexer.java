@@ -134,6 +134,12 @@ public class Lexer {
                 reader.stepBack();
             }
 
+            if (ch == '!') {
+                reader.step();
+                tokens.add(new Token(pos, TokenType.BANG));
+                continue;
+            }
+
             if (ch == '0') {
                 // Числа с нуля (кроме самого нуля) начинаться не могут.
                 reader.step();
