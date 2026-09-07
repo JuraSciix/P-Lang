@@ -9,96 +9,71 @@ public class BytecodeInterpreter {
     private static final int STATE_RUN = 0;
     private static final int STATE_RETURN = 1;
 
-    public static long run(ExecuteBlock block) {
-        byte[] code = block.code;
-        int cp = 0;
-        long[] registers = new long[256];
-        long[] constantPool = block.constantPool;
+    /**
+     *
+     * @param code Код программы
+     * @param pool Пул констант.
+     * @param cs Откуда начнётся выполнение кода
+     * @param data Память (регистры)
+     * @param off Смещение в памяти.
+     * @return Адрес возврата
+     */
+    public static int run(byte[] code, long[] pool, int cs, long[] data, int off) {
+        int cp = cs & 0xffff;
         int flag = 0;
         int state = STATE_RUN;
         int returnAddress = 0;
 
         while (state == STATE_RUN) {
-            switch (readUB(code, cp)) {
+            int opcode = readUB(code, cp);
+            switch (opcode) {
                 case add: case sub:
                 case mul: case div: case rem:
                 case bit_and: case bit_or: case bit_xor: {
-                    int index1 = readUB(code, cp + 1);
-                    int index2 = readUB(code, cp + 2);
-                    int index3 = readUB(code, cp + 3);
-                    switch (readUB(code, cp)) {
-                        case add:
-                            registers[index3] = registers[index1] + registers[index2];
-                            break;
-                        case sub:
-                            registers[index3] = registers[index1] - registers[index2];
-                            break;
-                        case mul:
-                            registers[index3] = registers[index1] * registers[index2];
-                            break;
-                        case div:
-                            registers[index3] = registers[index1] / registers[index2];
-                            break;
-                        case rem:
-                            registers[index3] = registers[index1] % registers[index2];
-                            break;
-                        case bit_and:
-                            registers[index3] = registers[index1] & registers[index2];
-                            break;
-                        case bit_or:
-                            registers[index3] = registers[index1] | registers[index2];
-                            break;
-                        case bit_xor:
-                            registers[index3] = registers[index1] ^ registers[index2];
-                            break;
-                    }
+                    long lhs = data[off + readUB(code, cp + 1)];
+                    long rhs = data[off + readUB(code, cp + 2)];
+                    int ri = off + readUB(code, cp + 3);
                     cp += 4;
-                    continue;
+                    switch (opcode) {
+                        case add:     data[ri] = lhs + rhs; continue;
+                        case sub:     data[ri] = lhs - rhs; continue;
+                        case mul:     data[ri] = lhs * rhs; continue;
+                        case div:     data[ri] = lhs / rhs; continue;
+                        case rem:     data[ri] = lhs % rhs; continue;
+                        case bit_and: data[ri] = lhs & rhs; continue;
+                        case bit_or:  data[ri] = lhs | rhs; continue;
+                        case bit_xor: data[ri] = lhs ^ rhs; continue;
+                        default: throw new AssertionError();
+                    }
                 }
 
                 case bit_inv: {
-                    int index1 = readUB(code, cp + 1);
-                    int index2 = readUB(code, cp + 2);
-                    registers[index2] = ~registers[index1];
+                    data[off + readUB(code, cp + 2)] = ~data[off + readUB(code, cp + 1)];
                     cp += 3;
                     continue;
                 }
 
                 case neg: {
-                    int index1 = readUB(code, cp + 1);
-                    int index2 = readUB(code, cp + 2);
-                    registers[index2] = -registers[index1];
+                    data[off + readUB(code, cp + 2)] = -data[off + readUB(code, cp + 1)];
                     cp += 3;
                     continue;
                 }
 
                 case const_m1: case const_0:
                 case const_1: case const_2: {
-                    int index = readUB(code, cp + 1);
-                    registers[index] = readUB(code, cp) - const_0;
+                    data[off + readUB(code, cp + 1)] = opcode - const_0;
                     cp += 2;
                     continue;
                 }
 
                 case load: {
-                    int constIndex = read2UB(code, cp + 1);
-                    int index = readUB(code, cp + 3);
-                    registers[index] = constantPool[constIndex];
+                    data[off + readUB(code, cp + 3)] = pool[off + read2UB(code, cp + 1)];
                     cp += 4;
                     continue;
                 }
 
-                case reset: {
-                    int index = readUB(code, cp + 1);
-                    registers[index] = 0L;
-                    cp += 2;
-                    continue;
-                }
-
                 case mov: {
-                    int index0 = readUB(code, cp + 1);
-                    int index1 = readUB(code, cp + 2);
-                    registers[index1] = registers[index0];
+                    data[off + readUB(code, cp + 2)] = data[off + readUB(code, cp + 1)];
                     cp += 3;
                     continue;
                 }
@@ -106,10 +81,9 @@ public class BytecodeInterpreter {
                 case cmp_eq:case cmp_ne:
                 case cmp_le: case cmp_lt:
                 case cmp_ge: case cmp_gt: {
-                    int opcode = readUB(code, cp);
-                    int index0 = readUB(code, cp + 1);
-                    int index1 = readUB(code, cp + 2);
-                    flag = (opcode == cmp_ne) ^ compare(registers[index0], registers[index1],
+                    flag = (opcode == cmp_ne) ^ compare(
+                            data[off + readUB(code, cp + 1)],
+                            data[off + readUB(code, cp + 2)],
                             opcode == cmp_ne || opcode == cmp_eq || opcode == cmp_ge || opcode == cmp_le,
                             opcode == cmp_ge || opcode == cmp_gt,
                             opcode == cmp_le || opcode == cmp_lt) ? 1 : 0;
@@ -125,7 +99,7 @@ public class BytecodeInterpreter {
                 case jmp_z:
                 case jmp_nz: {
                     cp += 3;
-                    if ((readUB(code, cp) == jmp_nz) ^ (flag == 0)) {
+                    if ((opcode == jmp_nz) ^ (flag == 0)) {
                         cp = read2UB(code, cp - 2);
                     }
                     continue;
@@ -133,13 +107,13 @@ public class BytecodeInterpreter {
 
                 case ret:
                     state = STATE_RETURN;
-                    returnAddress = readUB(code, cp + 1);
+                    returnAddress = off + readUB(code, cp + 1);
                     break;
 
                 default: throw new AssertionError("Illegal opcode");
             }
         }
 
-        return registers[returnAddress];
+        return returnAddress;
     }
 }

@@ -2,8 +2,6 @@ package plang;
 
 import plang.interpreter.BytecodeInterpreter;
 import plang.interpreter.CodePrinter;
-import plang.interpreter.ExecuteBlock;
-import plang.interpreter.OPCodeList;
 import plang.translator.LexResult;
 import plang.translator.Lexer;
 import plang.translator.Parser;
@@ -44,14 +42,16 @@ public class Main {
         CodePrinter codePrinter = new CodePrinter();
         codePrinter.print(data.code, data.constantPool);
 
-        int n = 1;
+        long[] memoryData = new long[256];
+
+        int n = 1000;
         for (int i = 0; i < n; i++) {
             long tx = System.nanoTime();
-            long result = BytecodeInterpreter.run(new ExecuteBlock(data.code, data.constantPool));
+            int result = BytecodeInterpreter.run(data.code, data.constantPool, 0, memoryData, 0);
             long ty = System.nanoTime();
 
             long hs = (ty - tx) / 1000;
-            System.out.println("Executed in " + hs + " hs. Result: " + result);
+            System.out.println("Executed in " + hs + " hs. Result: " + memoryData[result]);
         }
     }
 }

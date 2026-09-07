@@ -28,9 +28,6 @@ public final class OPCodeInfo {
         // Загружает значение из пула констант.
         INFO[load] = make("load", Param.CONST_ID, Param.REG);
 
-        // Зануляет регистр/
-        INFO[reset] = make("reset", Param.REG);
-
         // Копирует значение из левого регистра в правый.
         INFO[mov] = make("mov", Param.REG, Param.REG);
 

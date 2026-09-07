@@ -23,7 +23,6 @@ public interface OPCodeList {
     int const_2 = 14;
 
     int load = 15;
-    int reset = 16;
     int mov   = 17;
 
     int cmp_eq = 18;
