@@ -35,7 +35,6 @@ public class CodePrinter {
                         i += 2;
                         break;
                     case BCI:
-                        stream.print('.');
                         stream.print(Bytes.read2UB(code, i));
                         i += 2;
                         break;
