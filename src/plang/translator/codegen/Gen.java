@@ -61,31 +61,29 @@ public class Gen extends Visitor {
 
     @Override
     public void visitIf(If stmt) {
+        boolean hasElse = (stmt.elseBody != null);
         Items.CondItem cond = gen(stmt.cond).cond(null);
-        emitter.emitBS(cond.opcode, 0);
-        Mark m0 = emitter.mark(null);
-        gen(stmt.then).use();
-        if (stmt.orElse == null) {
-            emitter.close(m0);
-        } else {
-            emitter.emitBS(jump, 0);
-            Mark m1 = emitter.mark(null);
-            emitter.close(m0);
-            gen(stmt.orElse).use();
-            emitter.close(m1);
+        cond.emitFalseJump();
+        gen(stmt.body).use();
+        if (hasElse) {
+            cond.emitTrueJump();
+        }
+        cond.closeFalse();
+        if (hasElse) {
+            gen(stmt.elseBody).use();
+            cond.closeTrue();
         }
         resultItem = items.empty();
     }
 
     @Override
     public void visitWhile(While stmt) {
-        int m0 = emitter.top();
+        int startBci = emitter.top();
         Items.CondItem cond = gen(stmt.cond).cond(null);
-        emitter.emitBS(cond.opcode, 0);
-        Mark m1 = emitter.mark(null);
+        cond.emitFalseJump();
         gen(stmt.body).use();
-        emitter.emitBS(jump, m0);
-        emitter.close(m1);
+        emitter.emitBS(jump, startBci);
+        cond.closeFalse();
         resultItem = items.empty();
     }
 
@@ -111,7 +109,7 @@ public class Gen extends Visitor {
         }
 
         Items.StableItem stable = items.stable(index);
-        gen(stmt.expr, stable);
+        gen(stmt.expr, stable).use();
         resultItem = stable;
     }
 

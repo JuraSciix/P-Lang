@@ -42,7 +42,11 @@ class Items {
          * Превращает слот в логический.
          */
         CondItem cond(Item dest) {
-            use();
+            int unitIndex = code.acquire();
+            int itemIndex = use();
+            emitter.emitBB(const_1, unitIndex);
+            emitter.emitBBB(cmp_eq, itemIndex, unitIndex);
+            code.release(unitIndex);
             return new CondItem(jmp_z, dest);
         }
 
@@ -168,8 +172,10 @@ class Items {
      * Слот над логическим значением.
      */
     class CondItem extends Item {
-        final int opcode;
-        final Item dest;
+        int opcode;
+        Item dest;
+        Mark trueMarks;
+        Mark falseMarks;
 
         CondItem(int opcode, Item dest) {
             this.opcode = opcode;
@@ -177,26 +183,44 @@ class Items {
         }
 
         CondItem negate() {
-            return new CondItem(OPCodes.negate(opcode), dest);
+            opcode = OPCodes.negate(opcode);
+            return this;
+        }
+
+        void emitFalseJump() {
+            emitter.emitBS(opcode, 0);
+            falseMarks = emitter.mark(falseMarks);
+        }
+
+        void emitTrueJump() {
+            emitter.emitBS(jump, 0);
+            trueMarks = emitter.mark(trueMarks);
+        }
+
+        void closeTrue() {
+            emitter.close(trueMarks);
+        }
+
+        void closeFalse() {
+            emitter.close(falseMarks);
         }
 
         @Override
         CondItem cond(Item dest) {
-            return dest != null ? new CondItem(opcode, dest) : this;
+            this.dest = dest;
+            return this;
         }
 
         @Override
         int use() {
-            int index = dest.prepare().use();
-            emitter.emitBS(opcode, 0);
-            Mark m0 = emitter.mark(null);
-            emitter.emitBB(const_1, index);
-            emitter.emitBS(jump, 0);
-            Mark m1 = emitter.mark(null);
-            emitter.close(m0);
-            emitter.emitBB(const_0, index);
-            emitter.close(m1);
-            return index;
+            int destIndex = dest.prepare().use();
+            emitFalseJump();
+            emitter.emitBB(const_1, destIndex);
+            emitTrueJump();
+            closeFalse();
+            emitter.emitBB(const_0, destIndex);
+            closeTrue();
+            return destIndex;
         }
     }
 }
