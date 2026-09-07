@@ -95,7 +95,7 @@ class Items {
         @Override
         Item storeConst(int constIndex) {
             OneTimeItem item = new OneTimeItem();
-            emitter.emit2UBWithUB(load, constIndex, item.index);
+            emitter.emitBSB(load, constIndex, item.index);
             return item;
         }
     }
@@ -122,13 +122,13 @@ class Items {
 
         @Override
         Item storeStable(int stableIndex) {
-            emitter.emit2(mov, stableIndex, index);
+            emitter.emitBBB(mov, stableIndex, index);
             return this;
         }
 
         @Override
         Item storeConst(int constIndex) {
-            emitter.emit2UBWithUB(load, constIndex, index);
+            emitter.emitBSB(load, constIndex, index);
             return this;
         }
     }

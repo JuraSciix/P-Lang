@@ -13,60 +13,50 @@ public class CodeEmitter {
         return code.toArray();
     }
 
-    public void emit(int opcode) {
-        code.add((byte) opcode);
+    public void emit(int b) {
+        code.add((byte) b);
     }
 
-    public void emit1(int opcode, int argument) {
-        emitUB(opcode);
-        emitUB(argument);
+    public void emit2(int s) {
+        code.add((byte) s);
+        code.add((byte) (s >> 8));
     }
 
-    public void emitWith2UB(int opcode, int argument) {
-        emitUB(opcode);
-        emit2UB(argument);
+    public void emitBB(int b1, int b2) {
+        emit(b1);
+        emit(b2);
     }
 
-    public void emit2UBWithUB(int opcode, int x, int y) {
-        emitUB(opcode);
-        emit2UB(x);
-        emitUB(y);
+    public void emitBS(int b, int s) {
+        emit(b);
+        emit2(s);
     }
 
-    public void emit2(int opcode, int a1, int a2) {
-        emitUB(opcode);
-        emitUB(a1);
-        emitUB(a2);
+    public void emitBSB(int b1, int s, int b2) {
+        emit(b1);
+        emit2(s);
+        emit(b2);
     }
 
-    public void emitUnary(int opcode, int index, int resultIndex) {
-        emitUB(opcode);
-        emitUB(index);
-        emitUB(resultIndex);
+    public void emitBBB(int b1, int b2, int b3) {
+        emit(b1);
+        emit(b2);
+        emit(b3);
     }
 
-    public void emitBinary(int opcode, int index1, int index2, int resultIndex) {
-        emitUB(opcode);
-        emitUB(index1);
-        emitUB(index2);
-        emitUB(resultIndex);
+    public void emitBBBB(int b1, int b2, int b3, int b4) {
+        emit(b1);
+        emit(b2);
+        emit(b3);
+        emit(b4);
     }
 
-    public void emit2UB(int value) {
-        emitUB(value);
-        emitUB(value >> 8);
+    public void b(int index, int value) {
+        code.set(index, (byte) value);
     }
 
-    public void emitUB(int value) {
-        code.add((byte) value);
-    }
-
-    public void setUB(int pc, int value) {
-        code.set(pc, (byte) value);
-    }
-
-    public void set2UB(int pc, int value) {
-        setUB(pc, value);
-        setUB(pc + 1, value >> 8);
+    public void s(int index, int value) {
+        code.set(index, (byte) value);
+        code.set(index + 1, (byte) (value >> 8));
     }
 }

@@ -61,22 +61,22 @@ public class Gen extends Visitor {
     public void visitIf(If stmt) {
         gen(stmt.condition);
 
-        emitter.emitWith2UB(jmp_z, 0);
+        emitter.emitBS(jmp_z, 0);
         int pc0 = emitter.top() - 2;
 
         gen(stmt.thenBody);
 
         if (stmt.elseBody == null) {
-            emitter.set2UB(pc0, emitter.top());
+            emitter.s(pc0, emitter.top());
         } else {
-            emitter.emitWith2UB(jump, 0);
+            emitter.emitBS(jump, 0);
             int pc1 = emitter.top() - 2;
 
-            emitter.set2UB(pc0, emitter.top());
+            emitter.s(pc0, emitter.top());
 
             gen(stmt.elseBody);
 
-            emitter.set2UB(pc1, emitter.top());
+            emitter.s(pc1, emitter.top());
         }
     }
 
@@ -86,14 +86,14 @@ public class Gen extends Visitor {
 
         gen(stmt.condition);
 
-        emitter.emitWith2UB(jmp_z, 0);
+        emitter.emitBS(jmp_z, 0);
         int pc1 = emitter.top() - 2;
 
         gen(stmt.body);
 
-        emitter.emitWith2UB(jump, pc0);
+        emitter.emitBS(jump, pc0);
 
-        emitter.set2UB(pc1, emitter.top());
+        emitter.s(pc1, emitter.top());
     }
 
     @Override
@@ -102,7 +102,7 @@ public class Gen extends Visitor {
             emitter.emit(leave);
         } else {
             Item item = gen(stmt.expr);
-            emitter.emit1(_return, item.use());
+            emitter.emitBB(_return, item.use());
         }
     }
 
@@ -129,11 +129,11 @@ public class Gen extends Visitor {
         int rhsIndex = rhsItem.use();
 
         if (AstInfo.isComparing(stmt.tag)) {
-            emitter.emit2(opcode, lhsIndex, rhsIndex);
+            emitter.emitBBB(opcode, lhsIndex, rhsIndex);
             resultItem = items.cond();
         } else {
             Item dest = destItem.prepare();
-            emitter.emitBinary(opcode, lhsIndex, rhsIndex, dest.index());
+            emitter.emitBBBB(opcode, lhsIndex, rhsIndex, dest.index());
             resultItem = dest;
         }
     }
@@ -144,7 +144,7 @@ public class Gen extends Visitor {
         Item item = gen(stmt.expr);
         int index = item.use();
         Item dest = destItem.prepare();
-        emitter.emitUnary(opcode, index, dest.index());
+        emitter.emitBBB(opcode, index, dest.index());
         resultItem = dest;
     }
 
