@@ -129,6 +129,16 @@ class Items {
         }
 
         @Override
+        CondItem cond(Item dest) {
+            int unitIndex = code.acquire();
+            int itemIndex = use();
+            emitter.emitBB(const_0, unitIndex);
+            emitter.emitBBB(cmp_ne, itemIndex, unitIndex);
+            code.release(unitIndex);
+            return new CondItem(jmp_z, dest);
+        }
+
+        @Override
         int index() {
             return index;
         }
