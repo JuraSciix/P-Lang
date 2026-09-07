@@ -1,5 +1,6 @@
 package plang.translator;
 
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,8 +41,8 @@ public class Lexer {
         keywordMap.put("return", RETURN);
     }
 
-    public LexResult tokenize(String sourceName, String str) {
-        StringReader reader = new StringReader(str);
+    public LexResult tokenize(String sourceName, CharBuffer content) {
+        StringReader reader = new StringReader(content);
         StringBuilder buffer = new StringBuilder();
 
         List<Token> tokens = new ArrayList<>();

@@ -4,25 +4,31 @@ import plang.interpreter.BytecodeInterpreter;
 import plang.interpreter.CodePrinter;
 import plang.interpreter.ExecuteBlock;
 import plang.interpreter.OPCodeList;
-import plang.translator.*;
+import plang.translator.LexResult;
+import plang.translator.Lexer;
+import plang.translator.Parser;
+import plang.translator.ParserResult;
 import plang.translator.codegen.Code;
 import plang.translator.codegen.CodeData;
 import plang.translator.codegen.CodeEmitter;
 import plang.translator.codegen.Gen;
 import plang.utils.IOUtils;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+        Path path = Paths.get("input", "foo.pl");
+        CharBuffer content = IOUtils.readCharBufferFromPath(path, StandardCharsets.UTF_8);
+
         Lexer lexer = new Lexer();
         Parser parser = new Parser();
 
-        File file = new File(System.getProperty("user.dir"), "input/foo.pl");
-        String str = IOUtils.readFile(file);
-
-        LexResult lexResult = lexer.tokenize("test", str);
+        LexResult lexResult = lexer.tokenize("test", content);
         ParserResult parserResult = parser.parse(lexResult);
 
 //        AstPrintVisitor printVisitor = new AstPrintVisitor();
