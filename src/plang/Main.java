@@ -33,7 +33,7 @@ public class Main {
         CodeEmitter emitter = new CodeEmitter();
         Gen gen = new Gen(code, emitter);
         parserResult.getStatements().forEach(stmt -> stmt.accept(gen));
-        emitter.emit(OPCodeList.leave); // В конце всегда должна быть завершающая инструкция
+        emitter.emitByte(OPCodeList.leave); // В конце всегда должна быть завершающая инструкция
 
         CodeData data = gen.getData();
         CodePrinter codePrinter = new CodePrinter();

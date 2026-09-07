@@ -174,16 +174,14 @@ class Items {
         @Override
         int use() {
             int index = dest.prepare().use();
-
             emitter.emitBS(opcode, 0);
-            int pc0 = emitter.top() - 2;
+            int m0 = emitter.top() - 2;
             emitter.emitBB(const_1, index);
             emitter.emitBS(jump, 0);
-            int pc1 = emitter.top() - 2;
-            emitter.s(pc0, emitter.top());
+            int m1 = emitter.top() - 2;
+            emitter.setTop(m0);
             emitter.emitBB(const_0, index);
-            emitter.s(pc1, emitter.top());
-
+            emitter.setTop(m1);
             return index;
         }
     }

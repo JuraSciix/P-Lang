@@ -62,44 +62,36 @@ public class Gen extends Visitor {
         Items.CondItem cond = gen(stmt.condition).cond(null);
 
         emitter.emitBS(cond.opcode, 0);
-        int pc0 = emitter.top() - 2;
+        int m0 = emitter.top() - 2;
 
         gen(stmt.thenBody);
 
         if (stmt.elseBody == null) {
-            emitter.s(pc0, emitter.top());
+            emitter.setTop(m0);
         } else {
             emitter.emitBS(jump, 0);
-            int pc1 = emitter.top() - 2;
-
-            emitter.s(pc0, emitter.top());
-
+            int m1 = emitter.top() - 2;
+            emitter.setTop(m0);
             gen(stmt.elseBody);
-
-            emitter.s(pc1, emitter.top());
+            emitter.setTop(m1);
         }
     }
 
     @Override
     public void visitWhile(While stmt) {
-        int pc0 = emitter.top();
-
+        int m0 = emitter.top();
         Items.CondItem cond = gen(stmt.condition).cond(null);
-
         emitter.emitBS(cond.opcode, 0);
-        int pc1 = emitter.top() - 2;
-
+        int m1 = emitter.top() - 2;
         gen(stmt.body);
-
-        emitter.emitBS(jump, pc0);
-
-        emitter.s(pc1, emitter.top());
+        emitter.emitBS(jump, m0);
+        emitter.setTop(m1);
     }
 
     @Override
     public void visitReturn(Return stmt) {
         if (stmt.expr == null) {
-            emitter.emit(leave);
+            emitter.emitByte(leave);
         } else {
             Item item = gen(stmt.expr);
             emitter.emitBB(_return, item.use());
