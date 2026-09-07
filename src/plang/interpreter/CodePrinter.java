@@ -16,11 +16,11 @@ public class CodePrinter {
     public void print(byte[] code, long[] constantPool) {
         int i = 0;
         while (i < code.length) {
-            OPCodeInfo info = OPCodeInfo.info(Bytes.readUB(code, i));
+            OPCodeInfo info = OPCodeInfo.of(Bytes.readUB(code, i));
             stream.printf("%4d. ", i);
             i++;
-            stream.print(info.name);
-            for (OPCodeInfo.Param param : info.params) {
+            stream.print(info.name());
+            for (OPCodeInfo.Param param : info.params()) {
                 stream.print(' ');
                 switch (param) {
                     case REG:
