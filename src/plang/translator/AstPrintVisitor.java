@@ -45,19 +45,19 @@ public class AstPrintVisitor extends Ast.Visitor {
     @Override
     public void visitIf(If tree) {
         output.println("IF (");
-        tree.condition.accept(this);
+        tree.cond.accept(this);
         output.println(")");
-        tree.thenBody.accept(this);
-        if (tree.elseBody != null) {
+        tree.then.accept(this);
+        if (tree.orElse != null) {
             output.println("ELSE");
-            tree.elseBody.accept(this);
+            tree.orElse.accept(this);
         }
     }
 
     @Override
     public void visitWhile(While stmt) {
         output.println("WHILE (");
-        stmt.condition.accept(this);
+        stmt.cond.accept(this);
         output.println(")");
         stmt.body.accept(this);
     }

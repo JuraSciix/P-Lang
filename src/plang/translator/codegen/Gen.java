@@ -61,17 +61,17 @@ public class Gen extends Visitor {
 
     @Override
     public void visitIf(If stmt) {
-        Items.CondItem cond = gen(stmt.condition).cond(null);
+        Items.CondItem cond = gen(stmt.cond).cond(null);
         emitter.emitBS(cond.opcode, 0);
         Mark m0 = emitter.mark(null);
-        gen(stmt.thenBody).use();
-        if (stmt.elseBody == null) {
+        gen(stmt.then).use();
+        if (stmt.orElse == null) {
             emitter.close(m0);
         } else {
             emitter.emitBS(jump, 0);
             Mark m1 = emitter.mark(null);
             emitter.close(m0);
-            gen(stmt.elseBody).use();
+            gen(stmt.orElse).use();
             emitter.close(m1);
         }
         resultItem = items.empty();
@@ -80,7 +80,7 @@ public class Gen extends Visitor {
     @Override
     public void visitWhile(While stmt) {
         int m0 = emitter.top();
-        Items.CondItem cond = gen(stmt.condition).cond(null);
+        Items.CondItem cond = gen(stmt.cond).cond(null);
         emitter.emitBS(cond.opcode, 0);
         Mark m1 = emitter.mark(null);
         gen(stmt.body).use();

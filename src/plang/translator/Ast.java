@@ -46,15 +46,15 @@ public interface Ast {
     }
 
     final class If extends Stmt {
-        public final Expr condition;
-        public final Stmt thenBody;
-        public final Stmt elseBody;
+        public final Expr cond;
+        public final Stmt then;
+        public final Stmt orElse;
 
-        public If(int pos, Expr condition, Stmt thenBody, Stmt elseBody) {
+        public If(int pos, Expr cond, Stmt then, Stmt orElse) {
             super(pos);
-            this.condition = condition;
-            this.thenBody = thenBody;
-            this.elseBody = elseBody;
+            this.cond = cond;
+            this.then = then;
+            this.orElse = orElse;
         }
 
         @Override
@@ -62,12 +62,12 @@ public interface Ast {
     }
 
     final class While extends Stmt {
-        public final Expr condition;
+        public final Expr cond;
         public final Stmt body;
 
-        public While(int pos, Expr condition, Stmt body) {
+        public While(int pos, Expr cond, Stmt body) {
             super(pos);
-            this.condition = condition;
+            this.cond = cond;
             this.body = body;
         }
 
