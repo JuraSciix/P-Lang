@@ -85,13 +85,19 @@ public final class BytecodeInterpreter {
                     continue;
                 }
 
-                case cmp_eq: case cmp_ne:
+                case cmp_eq: case cmp_ne: {
+                    long lhs = data[readUB(code, cp + 1)];
+                    long rhs = data[readUB(code, cp + 2)];
+                    flag = (opcode == cmp_ne) ^ (lhs == rhs) ? 1 : 0;
+                    cp += 3;
+                    continue;
+                }
                 case cmp_le: case cmp_lt:
                 case cmp_ge: case cmp_gt: {
-                    flag = (opcode == cmp_ne) ^ compare(
+                    flag = compare(
                             data[readUB(code, cp + 1)],
                             data[readUB(code, cp + 2)],
-                            opcode == cmp_ne || opcode == cmp_eq || opcode == cmp_ge || opcode == cmp_le,
+                            opcode == cmp_ge || opcode == cmp_le,
                             opcode == cmp_ge || opcode == cmp_gt,
                             opcode == cmp_le || opcode == cmp_lt) ? 1 : 0;
                     cp += 3;
