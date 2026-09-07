@@ -138,10 +138,10 @@ public class Lexer {
         while (reader.hasRemaining() && seeking) {
             switch (reader.currentChar()) {
                 case '\n':
-                case '\r':
                     seeking = false;
                 case ' ':
                 case '\t':
+                case '\r':
                     reader.step();
                     break;
                 default:
