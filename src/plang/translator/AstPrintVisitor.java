@@ -47,10 +47,10 @@ public class AstPrintVisitor extends Ast.Visitor {
         output.println("IF (");
         tree.cond.accept(this);
         output.println(")");
-        tree.then.accept(this);
-        if (tree.orElse != null) {
+        tree.body.accept(this);
+        if (tree.elseBody != null) {
             output.println("ELSE");
-            tree.orElse.accept(this);
+            tree.elseBody.accept(this);
         }
     }
 

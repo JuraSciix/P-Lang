@@ -47,14 +47,14 @@ public interface Ast {
 
     final class If extends Stmt {
         public final Expr cond;
-        public final Stmt then;
-        public final Stmt orElse;
+        public final Stmt body;
+        public final Stmt elseBody;
 
-        public If(int pos, Expr cond, Stmt then, Stmt orElse) {
+        public If(int pos, Expr cond, Stmt body, Stmt elseBody) {
             super(pos);
             this.cond = cond;
-            this.then = then;
-            this.orElse = orElse;
+            this.body = body;
+            this.elseBody = elseBody;
         }
 
         @Override
@@ -123,6 +123,8 @@ public interface Ast {
             CMP_GE,
             CMP_GT,
             CMP_LE,
+            CON,
+            DIS,
             PARENS,
             INT,
             VAR,

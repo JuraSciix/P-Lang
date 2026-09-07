@@ -119,7 +119,47 @@ public class Parser {
     // Скобки
 
     private Expr parseExpr(TokenReader reader) {
-        return parseEq(reader);
+        return parseDis(reader);
+    }
+
+    private Expr parseDis(TokenReader reader) {
+        // Look-ahead
+        Expr lhs = parseCon(reader);
+
+        while (reader.hasRemaining()) {
+            Token tk = reader.currentToken();
+
+            if (tk.hasType(BARBAR)) {
+                reader.step();
+                Expr rhs = parseCon(reader);
+                lhs = new BinaryOp(tk.pos, Tag.DIS, lhs, rhs);
+                continue;
+            }
+
+            break;
+        }
+
+        return lhs;
+    }
+
+    private Expr parseCon(TokenReader reader) {
+        // Look-ahead
+        Expr lhs = parseEq(reader);
+
+        while (reader.hasRemaining()) {
+            Token tk = reader.currentToken();
+
+            if (tk.hasType(AMPAMP)) {
+                reader.step();
+                Expr rhs = parseEq(reader);
+                lhs = new BinaryOp(tk.pos, Tag.CON, lhs, rhs);
+                continue;
+            }
+
+            break;
+        }
+
+        return lhs;
     }
 
     private Expr parseEq(TokenReader reader) {

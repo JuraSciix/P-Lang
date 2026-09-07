@@ -64,14 +64,15 @@ public class Gen extends Visitor {
         boolean hasElse = (stmt.elseBody != null);
         Items.CondItem cond = gen(stmt.cond).cond(null);
         cond.emitFalseJump();
+        cond.closeTrue();
         gen(stmt.body).use();
         if (hasElse) {
-            cond.emitTrueJump();
-        }
-        cond.closeFalse();
-        if (hasElse) {
+            Mark exitMark = emitter.mark(jump, null);
+            cond.closeFalse();
             gen(stmt.elseBody).use();
-            cond.closeTrue();
+            emitter.close(exitMark);
+        } else {
+            cond.closeFalse();
         }
         resultItem = items.empty();
     }
@@ -115,20 +116,48 @@ public class Gen extends Visitor {
 
     @Override
     public void visitBinaryOp(BinaryOp stmt) {
-        int opcode = AstInfo.opcodeFromTag(stmt.tag);
-        Item lhsItem = gen(stmt.lhs);
-        Item rhsItem = gen(stmt.rhs);
+        switch (stmt.tag) {
+            case CON: {
+                Items.CondItem lhsCond = gen(stmt.lhs).cond(null);
+                lhsCond.emitFalseJump();
+                lhsCond.closeTrue();
+                Items.CondItem rhsCond = gen(stmt.rhs).cond(null);
+                resultItem = items.cond(destItem).inherit(
+                        rhsCond.opcode,
+                        rhsCond.trueMarks,
+                        Mark.merge(lhsCond.falseMarks, rhsCond.falseMarks));
+                break;
+            }
 
-        int lhsIndex = lhsItem.use();
-        int rhsIndex = rhsItem.use();
+            case DIS: {
+                Items.CondItem lhsCond = gen(stmt.lhs).cond(null);
+                lhsCond.emitTrueJump();
+                lhsCond.closeFalse();
+                Items.CondItem rhsCond = gen(stmt.rhs).cond(null);
+                resultItem = items.cond(destItem).inherit(
+                        rhsCond.opcode,
+                        Mark.merge(lhsCond.trueMarks, rhsCond.trueMarks),
+                        rhsCond.falseMarks);
+                break;
+            }
 
-        if (AstInfo.isComparing(stmt.tag)) {
-            emitter.emitBBB(opcode, lhsIndex, rhsIndex);
-            resultItem = items.cond(destItem);
-        } else {
-            Item dest = destItem.prepare();
-            emitter.emitBBBB(opcode, lhsIndex, rhsIndex, dest.index());
-            resultItem = dest;
+            default: {
+                Item lhsItem = gen(stmt.lhs);
+                Item rhsItem = gen(stmt.rhs);
+
+                int lhsIndex = lhsItem.use();
+                int rhsIndex = rhsItem.use();
+
+                int opcode = AstInfo.opcodeFromTag(stmt.tag);
+                if (AstInfo.isComparing(stmt.tag)) {
+                    emitter.emitBBB(opcode, lhsIndex, rhsIndex);
+                    resultItem = items.cond(destItem);
+                } else {
+                    Item dest = destItem.prepare();
+                    emitter.emitBBBB(opcode, lhsIndex, rhsIndex, dest.index());
+                    resultItem = dest;
+                }
+            }
         }
     }
 

@@ -64,6 +64,11 @@ public class CodeEmitter {
         return new Mark(top() - 2, prev);
     }
 
+    public Mark mark(int opcode, Mark prev) {
+        emitBS(opcode, 0);
+        return new Mark(top() - 2, prev);
+    }
+
     public void close(Mark mark) {
         int t = top();
         for (Mark m = mark; m != null; m = m.prev) {

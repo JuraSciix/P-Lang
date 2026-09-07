@@ -189,6 +189,9 @@ class Items {
 
         CondItem negate() {
             opcode = OPCodes.negate(opcode);
+            Mark tmp = falseMarks;
+            falseMarks = trueMarks;
+            trueMarks = tmp;
             return this;
         }
 
@@ -198,16 +201,25 @@ class Items {
         }
 
         void emitTrueJump() {
-            emitter.emitBS(jump, 0);
+            emitter.emitBS(OPCodes.negate(opcode), 0);
             trueMarks = emitter.mark(trueMarks);
         }
 
         void closeTrue() {
             emitter.close(trueMarks);
+            trueMarks = null;
         }
 
         void closeFalse() {
             emitter.close(falseMarks);
+            falseMarks = null;
+        }
+
+        CondItem inherit(int opcode, Mark trueMarks, Mark falseMarks) {
+            this.opcode = opcode;
+            this.trueMarks = trueMarks;
+            this.falseMarks = falseMarks;
+            return this;
         }
 
         @Override
@@ -220,11 +232,12 @@ class Items {
         int use() {
             int destIndex = dest.prepare().use();
             emitFalseJump();
+            closeTrue();
             emitter.emitBB(const_1, destIndex);
-            emitTrueJump();
+            Mark mark = emitter.mark(jump, null);
             closeFalse();
             emitter.emitBB(const_0, destIndex);
-            closeTrue();
+            emitter.close(mark);
             return destIndex;
         }
     }

@@ -1,3 +1,2 @@
-x = 1
-y = x > 1
-return y
+i = 100
+return !(i > 0 && i < 1)
