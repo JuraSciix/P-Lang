@@ -136,7 +136,15 @@ public class Lexer {
 
             if (ch == '!') {
                 reader.step();
-                tokens.add(new Token(pos, TokenType.BANG));
+                TokenType type = TokenType.BANG;
+                if (reader.hasRemaining()) {
+                    char ch1 = reader.currentChar();
+                    if (ch1 == '=') {
+                        reader.step();
+                        type = TokenType.NOT_EQ;
+                    }
+                }
+                tokens.add(new Token(pos, type));
                 continue;
             }
 
