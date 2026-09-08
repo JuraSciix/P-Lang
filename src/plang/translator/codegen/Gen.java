@@ -191,6 +191,6 @@ public class Gen extends Visitor {
 
     @Override
     public void visitParens(Parens stmt) {
-        stmt.expr.accept(this);
+        resultItem = gen(stmt.expr);
     }
 }
