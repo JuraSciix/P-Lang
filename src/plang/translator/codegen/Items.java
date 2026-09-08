@@ -186,6 +186,7 @@ public class Items {
         @Override
         CondItem toCond(Dest dest) {
             int unitIndex = code.acquire();
+            use();
             emitter.emitBB(const_0, unitIndex);
             emitter.emitBBB(cmp_ne, index(), unitIndex);
             code.release(unitIndex);
