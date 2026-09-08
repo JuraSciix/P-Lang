@@ -59,4 +59,8 @@ public class ParseHelper {
                 throw new AssertionError(tag);
         }
     }
+
+    public static int higher(int precedence) {
+        return precedence - 100;
+    }
 }

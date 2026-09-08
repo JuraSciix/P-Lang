@@ -118,26 +118,19 @@ public class Parser {
     // Скобки
 
     private Expr parseExpr(TokenReader reader) {
-        return parseBinary(reader);
+        return parseBinary(reader, precedence(Tag.DIS));
     }
 
-    private Expr parseBinary(TokenReader reader) {
-        // Look-ahead
+    private Expr parseBinary(TokenReader reader, int minPrecedence) {
         Expr lhs = parseUnary(reader);
 
-        if (reader.hasRemaining() && isTokenTypeOfBinary(reader.currentToken().type)) {
+        while (reader.hasRemaining()
+                && isTokenTypeOfBinary(reader.currentToken().type)
+                && precedence(tagOf(reader.currentToken().type)) <= minPrecedence) {
             Token tk = reader.getAndStep();
             Tag tag = tagOf(tk.type);
-            Expr rhs = parseBinary(reader);
-            BinaryOp rb;
-            if (rhs instanceof BinaryOp && precedence((rb = (BinaryOp) rhs).tag) > precedence(tag)) {
-                // Перестраиваем дерево:
-                // a * (b + c) = (a * b) + c
-                BinaryOp newLhs = new BinaryOp(tk.pos, tag, lhs, rb.lhs);
-                lhs = new BinaryOp(rb.pos, rb.tag, newLhs, rb.rhs);
-            } else {
-                lhs = new BinaryOp(tk.pos, tag, lhs, rhs);
-            }
+            Expr rhs = parseBinary(reader, higher(precedence(tag)));
+            lhs = new BinaryOp(tk.pos, tag, lhs, rhs);
         }
 
         return lhs;
