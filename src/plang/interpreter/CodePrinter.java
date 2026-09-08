@@ -16,7 +16,7 @@ public class CodePrinter {
     public void print(byte[] code, long[] constantPool) {
         int i = 0;
         while (i < code.length) {
-            OPCodeInfo info = OPCodeInfo.of(Bytes.readUB(code, i));
+            OPCodeInfo info = OPCodeInfo.of(Bytes.fetchUB(code, i));
             stream.printf("%4d. ", i);
             i++;
             stream.print(info.name());
@@ -25,17 +25,17 @@ public class CodePrinter {
                 switch (param) {
                     case REG:
                         stream.print('$');
-                        stream.print(Bytes.readUB(code, i));
+                        stream.print(Bytes.fetchUB(code, i));
                         i++;
                         break;
                     case CONST_ID:
                         // Печатаем сразу значение без префиксов
-                        int constIndex = Bytes.read2UB(code, i);
+                        int constIndex = Bytes.fetchUS(code, i);
                         stream.print(constantPool[constIndex]);
                         i += 2;
                         break;
                     case BCI:
-                        stream.print(Bytes.read2UB(code, i));
+                        stream.print(Bytes.fetchUS(code, i));
                         i += 2;
                         break;
                 }

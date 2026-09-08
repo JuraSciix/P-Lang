@@ -1,7 +1,7 @@
 package plang.interpreter;
 
-import static plang.interpreter.Bytes.read2UB;
-import static plang.interpreter.Bytes.readUB;
+import static plang.interpreter.Bytes.fetchUS;
+import static plang.interpreter.Bytes.fetchUB;
 import static plang.interpreter.OPCodeList.*;
 
 public final class BytecodeInterpreter {
@@ -31,14 +31,14 @@ public final class BytecodeInterpreter {
         System.arraycopy(arena, off, data, 0, size);
 
         while (state == STATE_RUN) {
-            int opcode = readUB(code, cp);
+            int opcode = fetchUB(code, cp);
             switch (opcode) {
                 case add: case sub:
                 case mul: case div: case rem:
                 case bit_and: case bit_or: case bit_xor: {
-                    long lhs = data[readUB(code, cp + 1)];
-                    long rhs = data[readUB(code, cp + 2)];
-                    int ri = readUB(code, cp + 3);
+                    long lhs = data[fetchUB(code, cp + 1)];
+                    long rhs = data[fetchUB(code, cp + 2)];
+                    int ri = fetchUB(code, cp + 3);
                     cp += 4;
                     switch (opcode) {
                         case add:     data[ri] = lhs + rhs; continue;
@@ -54,76 +54,76 @@ public final class BytecodeInterpreter {
                 }
 
                 case bit_inv: {
-                    data[readUB(code, cp + 2)] = ~data[readUB(code, cp + 1)];
+                    data[fetchUB(code, cp + 2)] = ~data[fetchUB(code, cp + 1)];
                     cp += 3;
                     continue;
                 }
 
                 case neg: {
-                    data[readUB(code, cp + 2)] = -data[readUB(code, cp + 1)];
+                    data[fetchUB(code, cp + 2)] = -data[fetchUB(code, cp + 1)];
                     cp += 3;
                     continue;
                 }
 
                 case const_m1: case const_0:
                 case const_1: case const_2: {
-                    data[readUB(code, cp + 1)] = opcode - const_0;
+                    data[fetchUB(code, cp + 1)] = opcode - const_0;
                     cp += 2;
                     continue;
                 }
 
                 case load: {
-                    data[readUB(code, cp + 3)] = pool[read2UB(code, cp + 1)];
+                    data[fetchUB(code, cp + 3)] = pool[fetchUS(code, cp + 1)];
                     cp += 4;
                     continue;
                 }
 
                 case mov: {
-                    data[readUB(code, cp + 2)] = data[readUB(code, cp + 1)];
+                    data[fetchUB(code, cp + 2)] = data[fetchUB(code, cp + 1)];
                     cp += 3;
                     continue;
                 }
 
                 case cmp_eq: case cmp_ne: {
-                    long lhs = data[readUB(code, cp + 1)];
-                    long rhs = data[readUB(code, cp + 2)];
+                    long lhs = data[fetchUB(code, cp + 1)];
+                    long rhs = data[fetchUB(code, cp + 2)];
                     test = (lhs == rhs) ^ (opcode == cmp_ne);
                     cp += 3;
                     continue;
                 }
 
                 case cmp_lt: case cmp_le: {
-                    long lhs = data[readUB(code, cp + 1)];
-                    long rhs = data[readUB(code, cp + 2)];
+                    long lhs = data[fetchUB(code, cp + 1)];
+                    long rhs = data[fetchUB(code, cp + 2)];
                     test = (lhs < rhs) || (lhs == rhs) && (opcode == cmp_le);
                     cp += 3;
                     continue;
                 }
 
                 case cmp_gt: case cmp_ge: {
-                    long lhs = data[readUB(code, cp + 1)];
-                    long rhs = data[readUB(code, cp + 2)];
+                    long lhs = data[fetchUB(code, cp + 1)];
+                    long rhs = data[fetchUB(code, cp + 2)];
                     test = (lhs > rhs) || (lhs == rhs) && (opcode == cmp_ge);
                     cp += 3;
                     continue;
                 }
 
                 case jump: {
-                    cp = read2UB(code, cp + 1);
+                    cp = fetchUS(code, cp + 1);
                     continue;
                 }
 
                 case jmp_z: case jmp_nz: {
                     cp += 3;
                     if (test ^ (opcode == jmp_nz)) {
-                        cp = read2UB(code, cp - 2);
+                        cp = fetchUS(code, cp - 2);
                     }
                     continue;
                 }
 
                 case ret:
                     state = STATE_RETURN;
-                    returnAddress = off + readUB(code, cp + 1);
+                    returnAddress = off + fetchUB(code, cp + 1);
                     break;
 
                 default: throw new AssertionError("Illegal opcode");
