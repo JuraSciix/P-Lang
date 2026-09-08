@@ -2,15 +2,19 @@ package plang.translator;
 
 import plang.translator.Ast.*;
 import plang.translator.Ast.Expr.Tag;
+import plang.translator.codegen.Name;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static plang.translator.ParseHelper.*;
 import static plang.translator.TokenType.*;
 
 public class Parser {
     // Архитектура парсера: LL(2)
+    private final Map<String, Name> nameMap = new HashMap<>();
 
     public ParseResult parse(LexResult lexResult) {
         List<Stmt> statements = new ArrayList<>();
@@ -98,7 +102,7 @@ public class Parser {
                 Token tk1 = reader.currentToken();
                 if (tk1.hasType(ASG)) {
                     reader.step();
-                    String name = reader.getTokenData(tk);
+                    Name name = nameOf(reader.getTokenData(tk));
                     Expr expr = parseExpr(reader);
                     return new Asg(tk1.pos, name, expr);
                 }
@@ -159,7 +163,7 @@ public class Parser {
 
         if (tk.hasType(IDENTIFIER)) {
             reader.step();
-            String name = reader.getTokenData(tk);
+            Name name = nameOf(reader.getTokenData(tk));
             return new Value(tk.pos, Tag.VAR, name);
         }
 
@@ -177,6 +181,13 @@ public class Parser {
         }
 
         throw new IllegalArgumentException("Unexpected token: " + tk.type + " at " + tk.pos);
+    }
+
+    private Name nameOf(String value) {
+        if (!nameMap.containsKey(value)) {
+            nameMap.put(value, new Name(value));
+        }
+        return nameMap.get(value);
     }
 
     private void expect(TokenReader reader, TokenType type) {

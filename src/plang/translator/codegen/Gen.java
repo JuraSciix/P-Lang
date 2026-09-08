@@ -5,9 +5,7 @@ import plang.translator.Ast.*;
 import static plang.interpreter.OPCodeList.*;
 
 public class Gen extends Visitor {
-    private final Code code;
     private final CodeEmitter emitter;
-    private final LocalTable localTable;
     private final ConstTable constTable;
     private final Items items;
 
@@ -15,9 +13,7 @@ public class Gen extends Visitor {
     Items.Dest destItem;
 
     public Gen(Code code, CodeEmitter emitter) {
-        this.code = code;
         this.emitter = emitter;
-        localTable = new LocalTable();
         constTable = new ConstTable();
         items = new Items(code, emitter, constTable);
 
@@ -97,17 +93,16 @@ public class Gen extends Visitor {
 
     @Override
     public void asg(Asg tree) {
-        int index;
-        if (localTable.contains(tree.name)) {
-            index = localTable.resolve(tree.name);
+        Items.StableItem item;
+        if (tree.name.hasItem()) {
+            item = tree.name.item();
         } else {
-            index = code.acquire();
-            localTable.register(tree.name, index);
+            item = items.stableItem();
+            tree.name.setItem(item);
         }
 
-        Items.Dest stable = items.stable(index);
-        gen(tree.expr, stable).use();
-        resultItem = stable.prepare();
+        gen(tree.expr, items.stable(item)).use();
+        resultItem = item;
     }
 
     @Override
@@ -167,8 +162,11 @@ public class Gen extends Visitor {
     public void value(Value tree) {
         switch (tree.tag) {
             case VAR: {
-                String name = (String) tree.value;
-                resultItem = destItem.storeStable(localTable.resolve(name));
+                Name name = (Name) tree.value;
+                if (!name.hasItem()) {
+                    throw new IllegalArgumentException("Unresolved variable " + name);
+                }
+                resultItem = destItem.storeStable(name.item().index());
                 break;
             }
 

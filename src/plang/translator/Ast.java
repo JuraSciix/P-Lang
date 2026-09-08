@@ -1,5 +1,7 @@
 package plang.translator;
 
+import plang.translator.codegen.Name;
+
 import java.util.List;
 
 public interface Ast {
@@ -88,10 +90,10 @@ public interface Ast {
     }
 
     final class Asg extends Stmt {
-        public final String name;
+        public final Name name;
         public final Expr expr;
 
-        public Asg(int pos, String name, Expr expr) {
+        public Asg(int pos, Name name, Expr expr) {
             super(pos);
             this.name = name;
             this.expr = expr;

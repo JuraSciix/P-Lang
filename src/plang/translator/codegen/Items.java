@@ -17,8 +17,12 @@ public class Items {
         return new DirectDest();
     }
 
-    StableDest stable(int index) {
-        return new StableDest(index);
+    StableDest stable(StableItem item) {
+        return new StableDest(item);
+    }
+
+    StableItem stableItem() {
+        return new StableItem(code.acquire());
     }
 
     CondItem cond(Dest dest) {
@@ -91,29 +95,29 @@ public class Items {
      * Прямой слот. Используется для того, чтобы напрямую получать значения.
      */
     class StableDest extends Dest {
-        final int index;
+        final StableItem item;
 
-        StableDest(int index) {
-            this.index = index;
+        StableDest(StableItem item) {
+            this.item = item;
         }
 
         @Override
         Item prepare() {
-            return new StableItem(index);
+            return item;
         }
 
         @Override
         Item storeStable(int stableIndex) {
-            emitter.emitBBB(mov, stableIndex, index);
+            emitter.emitBBB(mov, stableIndex, item.index());
             return new StableItem(stableIndex);
         }
 
         @Override
         Item storeConst(long value) {
             if (-1L <= value && value <= 2L) {
-                emitter.emitBB(const_0 + (int) value, index);
+                emitter.emitBB(const_0 + (int) value, item.index());
             } else {
-                emitter.emitBSB(load, constTable.lookup(value), index);
+                emitter.emitBSB(load, constTable.lookup(value), item.index);
             }
             return prepare();
         }
