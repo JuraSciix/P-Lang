@@ -4,15 +4,13 @@ import plang.translator.Ast.*;
 import plang.translator.Ast.Expr.Tag;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static plang.translator.ParseHelper.*;
 import static plang.translator.TokenType.*;
 
 public class Parser {
-
-    // Рекурсивный спуск: LR(1)
+    // Архитектура парсера: LL(2)
 
     public ParserResult parse(LexResult lexResult) {
         List<Stmt> statements = new ArrayList<>();
@@ -128,25 +126,21 @@ public class Parser {
     private Expr parseBinary(TokenReader reader) {
         // Look-ahead
         Expr lhs = parseUnary(reader);
-        BinaryOp last = null;
 
-        while (reader.hasRemaining()) {
+        if (reader.hasRemaining() && isTokenTypeOfBinary(reader.currentToken().type)) {
             Token tk = reader.currentToken();
-            if (!isTokenTypeOfBinary(tk.type)) {
-                break;
-            }
             reader.step();
-            Expr rhs = parseUnary(reader);
             Tag tag = tagOf(tk.type);
-            if (last != null && precedence(last.tag) > precedence(tag)) {
+            Expr rhs = parseBinary(reader);
+            BinaryOp rb;
+            if (rhs instanceof BinaryOp && precedence((rb = (BinaryOp) rhs).tag) > precedence(tag)) {
                 // Перестраиваем дерево:
-                // (a + b) * c = a + (b * c)
-                BinaryOp newRhs = new BinaryOp(tk.pos, tag, last.rhs, rhs);
-                last = new BinaryOp(last.pos, last.tag, last.lhs, newRhs);
+                // a * (b + c) = (a * b) + c
+                BinaryOp newLhs = new BinaryOp(tk.pos, tag, lhs, rb.lhs);
+                lhs = new BinaryOp(rb.pos, rb.tag, newLhs, rb.rhs);
             } else {
-                last = new BinaryOp(tk.pos, tag, lhs, rhs);
+                lhs = new BinaryOp(tk.pos, tag, lhs, rhs);
             }
-            lhs = last;
         }
 
         return lhs;
