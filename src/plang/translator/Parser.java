@@ -12,7 +12,7 @@ import static plang.translator.TokenType.*;
 public class Parser {
     // Архитектура парсера: LL(2)
 
-    public ParserResult parse(LexResult lexResult) {
+    public ParseResult parse(LexResult lexResult) {
         List<Stmt> statements = new ArrayList<>();
         TokenReader reader = new TokenReader(lexResult.getTokens(), lexResult.getData());
 
@@ -25,7 +25,7 @@ public class Parser {
             statements.add(parseStmt(reader));
         }
 
-        return new ParserResult(
+        return new ParseResult(
                 lexResult.getSourceName(),
                 lexResult.getLineNumberMap(),
                 new Compound(0, statements)

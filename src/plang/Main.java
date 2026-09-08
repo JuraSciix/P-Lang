@@ -21,7 +21,7 @@ public class Main {
         Parser parser = new Parser();
 
         LexResult lexResult = lexer.tokenize("test", content);
-        ParserResult parserResult = parser.parse(lexResult);
+        ParseResult parseResult = parser.parse(lexResult);
 
 //        AstPrintVisitor printVisitor = new AstPrintVisitor();
 //        parserResult.getStatements().forEach(stmt -> stmt.accept(printVisitor));
@@ -30,7 +30,7 @@ public class Main {
         Code code = new Code();
         CodeEmitter emitter = new CodeEmitter();
         Gen gen = new Gen(code, emitter);
-        Items.Item resultItem = gen.gen(parserResult.getAst());
+        Items.Item resultItem = gen.gen(parseResult.getAst());
         if (resultItem.alive()) {
             // Добавляем return
             gen.gen(new Ast.Return(0, null));
