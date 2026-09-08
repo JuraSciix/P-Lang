@@ -13,53 +13,35 @@ class Items {
         this.constTable = constTable;
     }
 
-    EmptyItem empty() {
-        return new EmptyItem();
+    DirectDest direct() {
+        return new DirectDest();
     }
 
-    DirectItem direct() {
-        return new DirectItem();
+    StableDest stableDest(int index) {
+        return new StableDest(index);
+    }
+
+    EmptyItem empty() {
+        return new EmptyItem();
     }
 
     StableItem stable(int index) {
         return new StableItem(index);
     }
 
-    CondItem cond(Item dest) {
+    CondItem cond(Dest dest) {
         return new CondItem(jmp_z, dest);
     }
 
     /**
-     * Слот - это функциональная единица для манипуляции регистрами.
+     * Слот для записи.
      */
-    abstract class Item {
+    abstract class Dest {
         /**
          * Подготавливает слот к использованию. Может создаваться новый одноразовый слот.
          */
         Item prepare() {
             throw new UnsupportedOperationException(getClass().getName());
-        }
-
-        /**
-         * Превращает слот в логический.
-         */
-        CondItem cond(Item dest) {
-            throw new UnsupportedOperationException(getClass().getName());
-        }
-
-        /**
-         * Возвращает индекс слота.
-         */
-        int index() {
-            throw new UnsupportedOperationException(getClass().getName());
-        }
-
-        /**
-         * Объявляет регистр использованным.
-         * После этого регистр может автоматически освободиться.
-         */
-        int use() {
-            return index();
         }
 
         /**
@@ -84,19 +66,9 @@ class Items {
     }
 
     /**
-     * Пустой предмет. Ничего не удерживает, ничего не освобождает.
-     */
-    class EmptyItem extends Item {
-        @Override
-        int use() {
-            return -1;
-        }
-    }
-
-    /**
      * Прямой слот. Используется для того, чтобы напрямую получать значения.
      */
-    class DirectItem extends Item {
+    class DirectDest extends Dest {
         @Override
         Item prepare() {
             return new OneTimeItem();
@@ -120,6 +92,76 @@ class Items {
     }
 
     /**
+     * Прямой слот. Используется для того, чтобы напрямую получать значения.
+     */
+    class StableDest extends Dest {
+        final int index;
+
+        StableDest(int index) {
+            this.index = index;
+        }
+
+        @Override
+        Item prepare() {
+            return new StableItem(index);
+        }
+
+        @Override
+        Item storeStable(int stableIndex) {
+            emitter.emitBBB(mov, stableIndex, index);
+            return new StableItem(stableIndex);
+        }
+
+        @Override
+        Item storeConst(long value) {
+            if (-1L <= value && value <= 2L) {
+                emitter.emitBB(const_0 + (int) value, index);
+            } else {
+                emitter.emitBSB(load, constTable.lookup(value), index);
+            }
+            return prepare();
+        }
+    }
+
+    /**
+     * Слот - это функциональная единица для манипуляции регистрами.
+     */
+    abstract class Item {
+
+        /**
+         * Превращает слот в логический.
+         */
+        CondItem cond(Dest dest) {
+            throw new UnsupportedOperationException(getClass().getName());
+        }
+
+        /**
+         * Возвращает индекс слота.
+         */
+        int index() {
+            throw new UnsupportedOperationException(getClass().getName());
+        }
+
+        /**
+         * Объявляет регистр использованным.
+         * После этого регистр может автоматически освободиться.
+         */
+        int use() {
+            return index();
+        }
+    }
+
+    /**
+     * Пустой предмет. Ничего не удерживает, ничего не освобождает.
+     */
+    class EmptyItem extends Item {
+        @Override
+        int use() {
+            return -1;
+        }
+    }
+
+    /**
      * Стабильный слот. Это переменная. Индекс не освобождается.
      */
     class StableItem extends Item {
@@ -130,12 +172,7 @@ class Items {
         }
 
         @Override
-        Item prepare() {
-            return this;
-        }
-
-        @Override
-        CondItem cond(Item dest) {
+        CondItem cond(Dest dest) {
             int unitIndex = code.acquire();
             int itemIndex = use();
             emitter.emitBB(const_0, unitIndex);
@@ -147,22 +184,6 @@ class Items {
         @Override
         int index() {
             return index;
-        }
-
-        @Override
-        Item storeStable(int stableIndex) {
-            emitter.emitBBB(mov, stableIndex, index);
-            return this;
-        }
-
-        @Override
-        Item storeConst(long value) {
-            if (-1L <= value && value <= 2L) {
-                emitter.emitBB(const_0 + (int) value, index);
-            } else {
-                emitter.emitBSB(load, constTable.lookup(value), index);
-            }
-            return this;
         }
     }
 
@@ -188,11 +209,11 @@ class Items {
      */
     class CondItem extends Item {
         int opcode;
-        Item dest;
+        Dest dest;
         Mark trueMarks;
         Mark falseMarks;
 
-        CondItem(int opcode, Item dest) {
+        CondItem(int opcode, Dest dest) {
             this.opcode = opcode;
             this.dest = dest;
         }
@@ -233,7 +254,7 @@ class Items {
         }
 
         @Override
-        CondItem cond(Item dest) {
+        CondItem cond(Dest dest) {
             this.dest = dest;
             return this;
         }

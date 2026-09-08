@@ -1,7 +1,6 @@
 package plang.translator.codegen;
 
 import plang.translator.Ast.*;
-import plang.translator.codegen.Items.Item;
 
 import static plang.interpreter.OPCodeList.*;
 
@@ -12,8 +11,8 @@ public class Gen extends Visitor {
     private final ConstTable constTable;
     private final Items items;
 
-    Item resultItem;
-    Item destItem;
+    Items.Item resultItem;
+    Items.Dest destItem;
 
     public Gen(Code code, CodeEmitter emitter) {
         this.code = code;
@@ -32,13 +31,13 @@ public class Gen extends Visitor {
         );
     }
 
-    Item gen(Stmt stmt) {
+    Items.Item gen(Stmt stmt) {
         return gen(stmt, items.direct());
     }
 
-    Item gen(Stmt stmt, Item dest) {
-        Item prevDest = destItem;
-        Item prevResult = resultItem;
+    Items.Item gen(Stmt stmt, Items.Dest dest) {
+        Items.Dest prevDest = destItem;
+        Items.Item prevResult = resultItem;
 
         try {
             destItem = dest;
@@ -90,7 +89,7 @@ public class Gen extends Visitor {
 
     @Override
     public void visitReturn(Return stmt) {
-        Item item = (stmt.expr != null) ? gen(stmt.expr) : items.direct().storeConst(0L);
+        Items.Item item = (stmt.expr != null) ? gen(stmt.expr) : items.direct().storeConst(0L);
         emitter.emitBB(ret, item.use());
         resultItem = items.empty();
     }
@@ -105,9 +104,9 @@ public class Gen extends Visitor {
             localTable.register(stmt.name, index);
         }
 
-        Items.StableItem stable = items.stable(index);
+        Items.Dest stable = items.stableDest(index);
         gen(stmt.expr, stable).use();
-        resultItem = stable;
+        resultItem = stable.prepare();
     }
 
     @Override
@@ -138,8 +137,8 @@ public class Gen extends Visitor {
             }
 
             default: {
-                Item lhsItem = gen(stmt.lhs);
-                Item rhsItem = gen(stmt.rhs);
+                Items.Item lhsItem = gen(stmt.lhs);
+                Items.Item rhsItem = gen(stmt.rhs);
 
                 int lhsIndex = lhsItem.use();
                 int rhsIndex = rhsItem.use();
@@ -149,7 +148,7 @@ public class Gen extends Visitor {
                     emitter.emitBBB(opcode, lhsIndex, rhsIndex);
                     resultItem = items.cond(destItem);
                 } else {
-                    Item dest = destItem.prepare();
+                    Items.Item dest = destItem.prepare();
                     emitter.emitBBBB(opcode, lhsIndex, rhsIndex, dest.index());
                     resultItem = dest;
                 }
@@ -159,14 +158,14 @@ public class Gen extends Visitor {
 
     @Override
     public void visitUnaryOp(UnaryOp stmt) {
-        Item item = gen(stmt.expr);
+        Items.Item item = gen(stmt.expr);
         switch (stmt.tag) {
             case NOT:
                 resultItem = item.cond(destItem).negate();
                 break;
             case NEG:
                 int index = item.use();
-                Item dest = destItem.prepare();
+                Items.Item dest = destItem.prepare();
                 emitter.emitBBB(neg, index, dest.index());
                 resultItem = dest;
                 break;
