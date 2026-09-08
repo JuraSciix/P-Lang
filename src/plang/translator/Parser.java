@@ -128,8 +128,7 @@ public class Parser {
         Expr lhs = parseUnary(reader);
 
         if (reader.hasRemaining() && isTokenTypeOfBinary(reader.currentToken().type)) {
-            Token tk = reader.currentToken();
-            reader.step();
+            Token tk = reader.getAndStep();
             Tag tag = tagOf(tk.type);
             Expr rhs = parseBinary(reader);
             BinaryOp rb;

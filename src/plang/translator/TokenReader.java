@@ -21,6 +21,10 @@ public final class TokenReader {
         return tokens.get(pos);
     }
 
+    public Token getAndStep() {
+        return tokens.get(pos++);
+    }
+
     public void step() {
         pos++;
     }
