@@ -66,21 +66,19 @@ public class Gen extends Visitor {
 
     @Override
     public void visitIf(If stmt) {
-        Items.CondItem cond = gen(stmt.cond).toCond(null);
-        cond.emitFalseJump();
-        cond.closeTrue();
+        Items.CondItem cond = gen(stmt.cond).toCond(null).emitFalseJump();
         Items.Item bodyItem = gen(stmt.body);
         bodyItem.use();
         boolean alive = true;
         if (stmt.elseBody != null) {
             Mark exitMark = emitter.mark(jump, null);
-            cond.closeFalse();
+            cond.closeFalseJumps();
             Items.Item elseBodyItem = gen(stmt.elseBody);
             elseBodyItem.use();
             emitter.close(exitMark);
             alive = bodyItem.alive() && elseBodyItem.alive();
         } else {
-            cond.closeFalse();
+            cond.closeFalseJumps();
         }
         resultItem = items.graph().aliveness(alive);
     }
@@ -88,12 +86,10 @@ public class Gen extends Visitor {
     @Override
     public void visitWhile(While stmt) {
         int startBci = emitter.top();
-        Items.CondItem cond = gen(stmt.cond).toCond(null);
-        cond.emitFalseJump();
-        cond.closeTrue();
+        Items.CondItem cond = gen(stmt.cond).toCond(null).emitFalseJump();
         gen(stmt.body).use();
         emitter.emitBS(jump, startBci);
-        cond.closeFalse();
+        cond.closeFalseJumps();
         resultItem = items.graph();
     }
 
@@ -123,26 +119,16 @@ public class Gen extends Visitor {
     public void visitBinaryOp(BinaryOp stmt) {
         switch (stmt.tag) {
             case CON: {
-                Items.CondItem lhsCond = gen(stmt.lhs).toCond(null);
-                lhsCond.emitFalseJump();
-                lhsCond.closeTrue();
-                Items.CondItem rhsCond = gen(stmt.rhs).toCond(null);
-                resultItem = items.cond(destItem).inherit(
-                        rhsCond.opcode,
-                        rhsCond.trueMarks,
-                        Mark.merge(lhsCond.falseMarks, rhsCond.falseMarks));
+                Items.CondItem lhsCond = gen(stmt.lhs).toCond(null).emitFalseJump();
+                Items.CondItem rhsCond = gen(stmt.rhs).toCond(destItem);
+                resultItem = rhsCond.coalesceFalseJumps(lhsCond);
                 break;
             }
 
             case DIS: {
-                Items.CondItem lhsCond = gen(stmt.lhs).toCond(null);
-                lhsCond.emitTrueJump();
-                lhsCond.closeFalse();
-                Items.CondItem rhsCond = gen(stmt.rhs).toCond(null);
-                resultItem = items.cond(destItem).inherit(
-                        rhsCond.opcode,
-                        Mark.merge(lhsCond.trueMarks, rhsCond.trueMarks),
-                        rhsCond.falseMarks);
+                Items.CondItem lhsCond = gen(stmt.lhs).toCond(null).emitTrueJump();
+                Items.CondItem rhsCond = gen(stmt.rhs).toCond(destItem);
+                resultItem = rhsCond.coalesceTrueJumps(lhsCond);
                 break;
             }
 

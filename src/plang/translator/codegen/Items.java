@@ -79,9 +79,9 @@ public class Items {
         Item storeConst(long value) {
             OneTimeItem item = new OneTimeItem();
             if (-1L <= value && value <= 2L) {
-                emitter.emitBB(const_0 + (int) value, item.index);
+                emitter.emitBB(const_0 + (int) value, item.index());
             } else {
-                emitter.emitBSB(load, constTable.lookup(value), item.index);
+                emitter.emitBSB(load, constTable.lookup(value), item.index());
             }
             return item;
         }
@@ -177,7 +177,7 @@ public class Items {
      * Стабильный слот. Это переменная. Индекс не освобождается.
      */
     class StableItem extends Item {
-        final int index;
+        private final int index;
 
         StableItem(int index) {
             this.index = index;
@@ -211,8 +211,9 @@ public class Items {
 
         @Override
         int use() {
+            int index = index();
             code.release(index);
-            return super.use();
+            return index;
         }
     }
 
@@ -220,10 +221,10 @@ public class Items {
      * Слот над логическим значением.
      */
     class CondItem extends Item {
-        int opcode;
-        Dest dest;
-        Mark trueMarks;
-        Mark falseMarks;
+        private int opcode;
+        private Dest dest;
+        private Mark trueMarks;
+        private Mark falseMarks;
 
         CondItem(int opcode, Dest dest) {
             this.opcode = opcode;
@@ -238,30 +239,32 @@ public class Items {
             return this;
         }
 
-        void emitFalseJump() {
+        CondItem emitFalseJump() {
             emitter.emitBS(opcode, 0);
             falseMarks = emitter.mark(falseMarks);
+            emitter.close(trueMarks);
+            return this;
         }
 
-        void emitTrueJump() {
+        CondItem emitTrueJump() {
             emitter.emitBS(OPCodes.negate(opcode), 0);
             trueMarks = emitter.mark(trueMarks);
+            emitter.close(falseMarks);
+            return this;
         }
 
-        void closeTrue() {
-            emitter.close(trueMarks);
-            trueMarks = null;
-        }
-
-        void closeFalse() {
+        void closeFalseJumps() {
             emitter.close(falseMarks);
             falseMarks = null;
         }
 
-        CondItem inherit(int opcode, Mark trueMarks, Mark falseMarks) {
-            this.opcode = opcode;
-            this.trueMarks = trueMarks;
-            this.falseMarks = falseMarks;
+        CondItem coalesceTrueJumps(CondItem item) {
+            trueMarks = Mark.merge(trueMarks, item.trueMarks);
+            return this;
+        }
+
+        CondItem coalesceFalseJumps(CondItem item) {
+            falseMarks = Mark.merge(falseMarks, item.falseMarks);
             return this;
         }
 
@@ -274,13 +277,14 @@ public class Items {
         @Override
         int use() {
             int destIndex = dest.prepare().use();
-            emitFalseJump();
-            closeTrue();
+            emitter.emitBS(opcode, 0);
+            Mark elseMark = emitter.mark(falseMarks);
+            emitter.close(trueMarks);
             emitter.emitBB(const_1, destIndex);
-            Mark mark = emitter.mark(jump, null);
-            closeFalse();
+            Mark exitMark = emitter.mark(jump, null);
+            emitter.close(elseMark);
             emitter.emitBB(const_0, destIndex);
-            emitter.close(mark);
+            emitter.close(exitMark);
             return destIndex;
         }
     }
