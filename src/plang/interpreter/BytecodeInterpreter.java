@@ -1,6 +1,5 @@
 package plang.interpreter;
 
-import static plang.interpreter.Arithm.compare;
 import static plang.interpreter.Bytes.read2UB;
 import static plang.interpreter.Bytes.readUB;
 import static plang.interpreter.OPCodeList.*;
@@ -24,7 +23,7 @@ public final class BytecodeInterpreter {
     public int run(byte[] code, long[] pool, int cs, long[] arena, int off, int size) {
         int cp = cs & 0xffff;
         long[] data = buffer.get();
-        int flag = 0;
+        boolean test = false;
         int state = STATE_RUN;
         int returnAddress = 0;
 
@@ -88,18 +87,23 @@ public final class BytecodeInterpreter {
                 case cmp_eq: case cmp_ne: {
                     long lhs = data[readUB(code, cp + 1)];
                     long rhs = data[readUB(code, cp + 2)];
-                    flag = (opcode == cmp_ne) ^ (lhs == rhs) ? 1 : 0;
+                    test = (lhs == rhs) ^ (opcode == cmp_ne);
                     cp += 3;
                     continue;
                 }
-                case cmp_le: case cmp_lt:
-                case cmp_ge: case cmp_gt: {
-                    flag = compare(
-                            data[readUB(code, cp + 1)],
-                            data[readUB(code, cp + 2)],
-                            opcode == cmp_ge || opcode == cmp_le,
-                            opcode == cmp_ge || opcode == cmp_gt,
-                            opcode == cmp_le || opcode == cmp_lt) ? 1 : 0;
+
+                case cmp_lt: case cmp_le: {
+                    long lhs = data[readUB(code, cp + 1)];
+                    long rhs = data[readUB(code, cp + 2)];
+                    test = (lhs < rhs) || (lhs == rhs) && (opcode == cmp_le);
+                    cp += 3;
+                    continue;
+                }
+
+                case cmp_gt: case cmp_ge: {
+                    long lhs = data[readUB(code, cp + 1)];
+                    long rhs = data[readUB(code, cp + 2)];
+                    test = (lhs > rhs) || (lhs == rhs) && (opcode == cmp_ge);
                     cp += 3;
                     continue;
                 }
@@ -111,7 +115,7 @@ public final class BytecodeInterpreter {
 
                 case jmp_z: case jmp_nz: {
                     cp += 3;
-                    if ((opcode == jmp_nz) ^ (flag == 0)) {
+                    if (test ^ (opcode == jmp_nz)) {
                         cp = read2UB(code, cp - 2);
                     }
                     continue;
