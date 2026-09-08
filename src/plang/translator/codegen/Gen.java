@@ -90,6 +90,7 @@ public class Gen extends Visitor {
         int startBci = emitter.top();
         Items.CondItem cond = gen(stmt.cond).toCond(null);
         cond.emitFalseJump();
+        cond.closeTrue();
         gen(stmt.body).use();
         emitter.emitBS(jump, startBci);
         cond.closeFalse();
