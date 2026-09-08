@@ -67,7 +67,7 @@ public class Parser {
                     elseBody = parseStmt(reader);
                 }
             }
-            return new If(tk.pos, expr, thenBody, elseBody);
+            return new Conditional(tk.pos, expr, thenBody, elseBody);
         }
 
         if (tk.hasType(WHILE)) {
@@ -76,7 +76,7 @@ public class Parser {
             Expr expr = parseExpr(reader);
             expect(reader, RPAREN);
             Stmt body = parseStmt(reader);
-            return new While(tk.pos, expr, body);
+            return new WhileLoop(tk.pos, expr, body);
         }
 
         if (tk.hasType(RETURN)) {

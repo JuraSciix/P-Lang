@@ -51,9 +51,9 @@ public class Gen extends Visitor {
     }
 
     @Override
-    public void visitCompound(Compound stmt) {
+    public void compound(Compound tree) {
         boolean alive = true;
-        for (Stmt child : stmt.children) {
+        for (Stmt child : tree.children) {
             if (!gen(child).use().alive()) {
                 alive = false;
                 break;
@@ -63,79 +63,79 @@ public class Gen extends Visitor {
     }
 
     @Override
-    public void visitIf(If stmt) {
-        Items.CondItem cond = gen(stmt.cond).toCond(null).emitFalseJump();
-        boolean thenAlive = gen(stmt.body).use().alive();
-        if (stmt.elseBody != null) {
+    public void conditional(Conditional tree) {
+        Items.CondItem test = gen(tree.test).toCond(null).emitFalseJump();
+        boolean thenAlive = gen(tree.body).use().alive();
+        if (tree.elseBody != null) {
             Mark exitMark = emitter.mark(jump, null);
-            cond.closeFalseJumps();
-            boolean elseAlive = gen(stmt.elseBody).use().alive();
+            test.closeFalseJumps();
+            boolean elseAlive = gen(tree.elseBody).use().alive();
             emitter.close(exitMark);
             resultItem = items.graph().aliveness(thenAlive && elseAlive);
         } else {
-            cond.closeFalseJumps();
+            test.closeFalseJumps();
             resultItem = items.graph();
         }
     }
 
     @Override
-    public void visitWhile(While stmt) {
+    public void whileLoop(WhileLoop tree) {
         int startBci = emitter.top();
-        Items.CondItem cond = gen(stmt.cond).toCond(null).emitFalseJump();
-        gen(stmt.body).use();
+        Items.CondItem test = gen(tree.test).toCond(null).emitFalseJump();
+        gen(tree.body).use();
         emitter.emitBS(jump, startBci);
-        cond.closeFalseJumps();
+        test.closeFalseJumps();
         resultItem = items.graph();
     }
 
     @Override
-    public void visitReturn(Return stmt) {
-        Items.Item item = (stmt.expr != null) ? gen(stmt.expr) : items.direct().storeConst(0L);
+    public void returnOp(Return tree) {
+        Items.Item item = (tree.expr != null) ? gen(tree.expr) : items.direct().storeConst(0L);
         emitter.emitBB(ret, item.use().index());
         resultItem = items.graph().aliveness(false);
     }
 
     @Override
-    public void visitAsg(Asg stmt) {
+    public void asg(Asg tree) {
         int index;
-        if (localTable.contains(stmt.name)) {
-            index = localTable.resolve(stmt.name);
+        if (localTable.contains(tree.name)) {
+            index = localTable.resolve(tree.name);
         } else {
             index = code.acquire();
-            localTable.register(stmt.name, index);
+            localTable.register(tree.name, index);
         }
 
         Items.Dest stable = items.stable(index);
-        gen(stmt.expr, stable).use();
+        gen(tree.expr, stable).use();
         resultItem = stable.prepare();
     }
 
     @Override
-    public void visitBinaryOp(BinaryOp stmt) {
-        switch (stmt.tag) {
+    public void binaryOp(BinaryOp tree) {
+        switch (tree.tag) {
             case CON: {
-                Items.CondItem lhsCond = gen(stmt.lhs).toCond(null).emitFalseJump();
-                Items.CondItem rhsCond = gen(stmt.rhs).toCond(destItem);
+                Items.CondItem lhsCond = gen(tree.lhs).toCond(null).emitFalseJump();
+                Items.CondItem rhsCond = gen(tree.rhs).toCond(destItem);
                 resultItem = rhsCond.coalesceFalseJumps(lhsCond);
                 break;
             }
 
             case DIS: {
-                Items.CondItem lhsCond = gen(stmt.lhs).toCond(null).emitTrueJump();
-                Items.CondItem rhsCond = gen(stmt.rhs).toCond(destItem);
+                Items.CondItem lhsCond = gen(tree.lhs).toCond(null).emitTrueJump();
+                Items.CondItem rhsCond = gen(tree.rhs).toCond(destItem);
                 resultItem = rhsCond.coalesceTrueJumps(lhsCond);
                 break;
             }
 
             default: {
-                Items.Item lhsItem = gen(stmt.lhs);
-                Items.Item rhsItem = gen(stmt.rhs);
+                Items.Item lhsItem = gen(tree.lhs);
+                Items.Item rhsItem = gen(tree.rhs);
 
                 int lhsIndex = lhsItem.use().index();
                 int rhsIndex = rhsItem.use().index();
 
-                int opcode = AstInfo.opcodeFromTag(stmt.tag);
-                if (AstInfo.isComparing(stmt.tag)) {
+                int opcode = AstInfo.opcodeFromTag(tree.tag);
+                if (AstInfo.isComparing(tree.tag)) {
                     emitter.emitBBB(opcode, lhsIndex, rhsIndex);
                     resultItem = items.cond(destItem);
                 } else {
@@ -148,9 +148,9 @@ public class Gen extends Visitor {
     }
 
     @Override
-    public void visitUnaryOp(UnaryOp stmt) {
-        Items.Item item = gen(stmt.expr);
-        switch (stmt.tag) {
+    public void unaryOp(UnaryOp tree) {
+        Items.Item item = gen(tree.expr);
+        switch (tree.tag) {
             case NOT:
                 resultItem = item.toCond(destItem).negate();
                 break;
@@ -164,16 +164,16 @@ public class Gen extends Visitor {
     }
 
     @Override
-    public void visitValue(Value stmt) {
-        switch (stmt.tag) {
+    public void value(Value tree) {
+        switch (tree.tag) {
             case VAR: {
-                String name = (String) stmt.value;
+                String name = (String) tree.value;
                 resultItem = destItem.storeStable(localTable.resolve(name));
                 break;
             }
 
             case INT: {
-                long value = (long) stmt.value;
+                long value = (long) tree.value;
                 resultItem = destItem.storeConst(value);
                 break;
             }
@@ -181,7 +181,7 @@ public class Gen extends Visitor {
     }
 
     @Override
-    public void visitParens(Parens stmt) {
-        resultItem = gen(stmt.expr);
+    public void parens(Parens tree) {
+        resultItem = gen(tree.expr);
     }
 }

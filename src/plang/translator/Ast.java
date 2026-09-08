@@ -5,16 +5,16 @@ import java.util.List;
 public interface Ast {
 
     class Visitor {
-        public void visitCompound(Compound stmt) { visitStmt(stmt); }
-        public void visitIf(If stmt) { visitStmt(stmt); }
-        public void visitWhile(While stmt) { visitStmt(stmt); }
-        public void visitReturn(Return stmt) { visitStmt(stmt); }
-        public void visitAsg(Asg stmt) { visitStmt(stmt); }
-        public void visitBinaryOp(BinaryOp stmt) { visitStmt(stmt); }
-        public void visitUnaryOp(UnaryOp stmt) { visitStmt(stmt); }
-        public void visitValue(Value stmt) { visitStmt(stmt); }
-        public void visitParens(Parens stmt) { visitStmt(stmt); }
-        public void visitStmt(Stmt stmt) { assert stmt != null; }
+        public void compound(Compound tree) { tree(tree); }
+        public void conditional(Conditional tree) { tree(tree); }
+        public void whileLoop(WhileLoop tree) { tree(tree); }
+        public void returnOp(Return tree) { tree(tree); }
+        public void asg(Asg tree) { tree(tree); }
+        public void binaryOp(BinaryOp tree) { tree(tree); }
+        public void unaryOp(UnaryOp tree) { tree(tree); }
+        public void value(Value tree) { tree(tree); }
+        public void parens(Parens tree) { tree(tree); }
+        public void tree(Stmt stmt) { assert stmt != null; }
     }
 
     /**
@@ -41,38 +41,38 @@ public interface Ast {
 
         @Override
         public void accept(Visitor visitor) {
-            visitor.visitCompound(this);
+            visitor.compound(this);
         }
     }
 
-    final class If extends Stmt {
-        public final Expr cond;
+    final class Conditional extends Stmt {
+        public final Expr test;
         public final Stmt body;
         public final Stmt elseBody;
 
-        public If(int pos, Expr cond, Stmt body, Stmt elseBody) {
+        public Conditional(int pos, Expr test, Stmt body, Stmt elseBody) {
             super(pos);
-            this.cond = cond;
+            this.test = test;
             this.body = body;
             this.elseBody = elseBody;
         }
 
         @Override
-        public void accept(Visitor visitor) { visitor.visitIf(this); }
+        public void accept(Visitor visitor) { visitor.conditional(this); }
     }
 
-    final class While extends Stmt {
-        public final Expr cond;
+    final class WhileLoop extends Stmt {
+        public final Expr test;
         public final Stmt body;
 
-        public While(int pos, Expr cond, Stmt body) {
+        public WhileLoop(int pos, Expr test, Stmt body) {
             super(pos);
-            this.cond = cond;
+            this.test = test;
             this.body = body;
         }
 
         @Override
-        public void accept(Visitor visitor) { visitor.visitWhile(this); }
+        public void accept(Visitor visitor) { visitor.whileLoop(this); }
     }
 
     class Return extends Stmt {
@@ -84,7 +84,7 @@ public interface Ast {
         }
 
         @Override
-        public void accept(Visitor visitor) { visitor.visitReturn(this); }
+        public void accept(Visitor visitor) { visitor.returnOp(this); }
     }
 
     final class Asg extends Stmt {
@@ -99,7 +99,7 @@ public interface Ast {
 
         @Override
         public void accept(Visitor visitor) {
-            visitor.visitAsg(this);
+            visitor.asg(this);
         }
     }
 
@@ -154,7 +154,7 @@ public interface Ast {
         public Tag getTag() { return tag; }
 
         @Override
-        public void accept(Visitor visitor) { visitor.visitBinaryOp(this); }
+        public void accept(Visitor visitor) { visitor.binaryOp(this); }
     }
 
     class UnaryOp extends Expr {
@@ -171,7 +171,7 @@ public interface Ast {
         public Tag getTag() { return tag; }
 
         @Override
-        public void accept(Visitor visitor) { visitor.visitUnaryOp(this); }
+        public void accept(Visitor visitor) { visitor.unaryOp(this); }
     }
 
     class Value extends Expr {
@@ -188,7 +188,7 @@ public interface Ast {
         public Tag getTag() { return tag; }
 
         @Override
-        public void accept(Visitor visitor) { visitor.visitValue(this); }
+        public void accept(Visitor visitor) { visitor.value(this); }
     }
 
     class Parens extends Expr {
@@ -203,6 +203,6 @@ public interface Ast {
         public Tag getTag() { return Tag.PARENS; }
 
         @Override
-        public void accept(Visitor visitor) { visitor.visitParens(this); }
+        public void accept(Visitor visitor) { visitor.parens(this); }
     }
 }

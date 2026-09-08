@@ -11,7 +11,7 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
-    public void visitCompound(Compound tree) {
+    public void compound(Compound tree) {
         output.println("COMPOUND {");
         for (Stmt child : tree.children) {
             child.accept(this);
@@ -20,7 +20,7 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
-    public void visitAsg(Asg tree) {
+    public void asg(Asg tree) {
         output.print("VAR ");
         output.print(tree.name);
         output.print(" = ");
@@ -28,7 +28,7 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
-    public void visitBinaryOp(BinaryOp tree) {
+    public void binaryOp(BinaryOp tree) {
         output.println("BINARY-OP");
         tree.lhs.accept(this);
         output.println(tree.getTag());
@@ -36,16 +36,16 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
-    public void visitUnaryOp(UnaryOp tree) {
+    public void unaryOp(UnaryOp tree) {
         output.print("UNARY-OP ");
         output.println(tree.getTag());
         tree.expr.accept(this);
     }
 
     @Override
-    public void visitIf(If tree) {
+    public void conditional(Conditional tree) {
         output.println("IF (");
-        tree.cond.accept(this);
+        tree.test.accept(this);
         output.println(")");
         tree.body.accept(this);
         if (tree.elseBody != null) {
@@ -55,15 +55,15 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
-    public void visitWhile(While stmt) {
+    public void whileLoop(WhileLoop tree) {
         output.println("WHILE (");
-        stmt.cond.accept(this);
+        tree.test.accept(this);
         output.println(")");
-        stmt.body.accept(this);
+        tree.body.accept(this);
     }
 
     @Override
-    public void visitReturn(Return tree) {
+    public void returnOp(Return tree) {
         if (tree.expr == null) {
             output.print("RETURN NONE");
         } else {
@@ -73,7 +73,7 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
-    public void visitValue(Value tree) {
+    public void value(Value tree) {
         output.print("VALUE ");
         output.print(tree.getTag());
         output.print(" ");
@@ -81,7 +81,7 @@ public class AstPrintVisitor extends Ast.Visitor {
     }
 
     @Override
-    public void visitParens(Parens tree) {
+    public void parens(Parens tree) {
         output.println("PARENS (");
         tree.expr.accept(this);
         output.println(")");
