@@ -31,11 +31,11 @@ public class Gen extends Visitor {
         );
     }
 
-    Items.Item gen(Stmt stmt) {
+    public Items.Item gen(Stmt stmt) {
         return gen(stmt, items.direct());
     }
 
-    Items.Item gen(Stmt stmt, Items.Dest dest) {
+    public Items.Item gen(Stmt stmt, Items.Dest dest) {
         Items.Dest prevDest = destItem;
         Items.Item prevResult = resultItem;
 
@@ -52,46 +52,55 @@ public class Gen extends Visitor {
 
     @Override
     public void visitCompound(Compound stmt) {
+        boolean alive = true;
         for (Stmt child : stmt.children) {
-            gen(child).use();
+            Items.Item item = gen(child);
+            item.use();
+            if (!item.alive()) {
+                alive = false;
+                break;
+            }
         }
-        resultItem = items.empty();
+        resultItem = items.graph().aliveness(alive);
     }
 
     @Override
     public void visitIf(If stmt) {
-        boolean hasElse = (stmt.elseBody != null);
-        Items.CondItem cond = gen(stmt.cond).cond(null);
+        Items.CondItem cond = gen(stmt.cond).toCond(null);
         cond.emitFalseJump();
         cond.closeTrue();
-        gen(stmt.body).use();
-        if (hasElse) {
+        Items.Item bodyItem = gen(stmt.body);
+        bodyItem.use();
+        boolean alive = true;
+        if (stmt.elseBody != null) {
             Mark exitMark = emitter.mark(jump, null);
             cond.closeFalse();
-            gen(stmt.elseBody).use();
+            Items.Item elseBodyItem = gen(stmt.elseBody);
+            elseBodyItem.use();
             emitter.close(exitMark);
+            alive = bodyItem.alive() && elseBodyItem.alive();
         } else {
             cond.closeFalse();
         }
-        resultItem = items.empty();
+        resultItem = items.graph().aliveness(alive);
     }
 
     @Override
     public void visitWhile(While stmt) {
         int startBci = emitter.top();
-        Items.CondItem cond = gen(stmt.cond).cond(null);
+        Items.CondItem cond = gen(stmt.cond).toCond(null);
         cond.emitFalseJump();
         gen(stmt.body).use();
         emitter.emitBS(jump, startBci);
         cond.closeFalse();
-        resultItem = items.empty();
+        resultItem = items.graph();
     }
 
     @Override
     public void visitReturn(Return stmt) {
         Items.Item item = (stmt.expr != null) ? gen(stmt.expr) : items.direct().storeConst(0L);
         emitter.emitBB(ret, item.use());
-        resultItem = items.empty();
+        resultItem = items.graph().aliveness(false);
     }
 
     @Override
@@ -104,7 +113,7 @@ public class Gen extends Visitor {
             localTable.register(stmt.name, index);
         }
 
-        Items.Dest stable = items.stableDest(index);
+        Items.Dest stable = items.stable(index);
         gen(stmt.expr, stable).use();
         resultItem = stable.prepare();
     }
@@ -113,10 +122,10 @@ public class Gen extends Visitor {
     public void visitBinaryOp(BinaryOp stmt) {
         switch (stmt.tag) {
             case CON: {
-                Items.CondItem lhsCond = gen(stmt.lhs).cond(null);
+                Items.CondItem lhsCond = gen(stmt.lhs).toCond(null);
                 lhsCond.emitFalseJump();
                 lhsCond.closeTrue();
-                Items.CondItem rhsCond = gen(stmt.rhs).cond(null);
+                Items.CondItem rhsCond = gen(stmt.rhs).toCond(null);
                 resultItem = items.cond(destItem).inherit(
                         rhsCond.opcode,
                         rhsCond.trueMarks,
@@ -125,10 +134,10 @@ public class Gen extends Visitor {
             }
 
             case DIS: {
-                Items.CondItem lhsCond = gen(stmt.lhs).cond(null);
+                Items.CondItem lhsCond = gen(stmt.lhs).toCond(null);
                 lhsCond.emitTrueJump();
                 lhsCond.closeFalse();
-                Items.CondItem rhsCond = gen(stmt.rhs).cond(null);
+                Items.CondItem rhsCond = gen(stmt.rhs).toCond(null);
                 resultItem = items.cond(destItem).inherit(
                         rhsCond.opcode,
                         Mark.merge(lhsCond.trueMarks, rhsCond.trueMarks),
@@ -161,7 +170,7 @@ public class Gen extends Visitor {
         Items.Item item = gen(stmt.expr);
         switch (stmt.tag) {
             case NOT:
-                resultItem = item.cond(destItem).negate();
+                resultItem = item.toCond(destItem).negate();
                 break;
             case NEG:
                 int index = item.use();

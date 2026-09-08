@@ -2,14 +2,8 @@ package plang;
 
 import plang.interpreter.BytecodeInterpreter;
 import plang.interpreter.CodePrinter;
-import plang.translator.LexResult;
-import plang.translator.Lexer;
-import plang.translator.Parser;
-import plang.translator.ParserResult;
-import plang.translator.codegen.Code;
-import plang.translator.codegen.CodeData;
-import plang.translator.codegen.CodeEmitter;
-import plang.translator.codegen.Gen;
+import plang.translator.*;
+import plang.translator.codegen.*;
 import plang.utils.IOUtils;
 
 import java.io.IOException;
@@ -36,7 +30,11 @@ public class Main {
         Code code = new Code();
         CodeEmitter emitter = new CodeEmitter();
         Gen gen = new Gen(code, emitter);
-        parserResult.getAst().accept(gen);
+        Items.Item resultItem = gen.gen(parserResult.getAst());
+        if (resultItem.alive()) {
+            // Добавляем return
+            gen.gen(new Ast.Return(0, null));
+        }
 
         CodeData data = gen.getData();
         CodePrinter codePrinter = new CodePrinter();
@@ -45,7 +43,7 @@ public class Main {
         long[] memoryData = new long[256];
         BytecodeInterpreter interpreter = new BytecodeInterpreter();
 
-        int n = 1000;
+        int n = 1;
         for (int i = 0; i < n; i++) {
             long tx = System.nanoTime();
             int result = interpreter.run(data.code, data.constantPool, 0, memoryData, 0, 10);

@@ -25,8 +25,6 @@ public class Parser {
             statements.add(parseStmt(reader));
         }
 
-        statements.add(new Return(0, null));
-
         return new ParserResult(
                 lexResult.getSourceName(),
                 lexResult.getLineNumberMap(),

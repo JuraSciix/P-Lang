@@ -2,7 +2,7 @@ package plang.translator.codegen;
 
 import static plang.interpreter.OPCodeList.*;
 
-class Items {
+public class Items {
     private final Code code;
     private final CodeEmitter emitter;
     private final ConstTable constTable;
@@ -17,26 +17,22 @@ class Items {
         return new DirectDest();
     }
 
-    StableDest stableDest(int index) {
+    StableDest stable(int index) {
         return new StableDest(index);
-    }
-
-    EmptyItem empty() {
-        return new EmptyItem();
-    }
-
-    StableItem stable(int index) {
-        return new StableItem(index);
     }
 
     CondItem cond(Dest dest) {
         return new CondItem(jmp_z, dest);
     }
 
+    GraphItem graph() {
+        return new GraphItem();
+    }
+
     /**
      * Слот для записи.
      */
-    abstract class Dest {
+    public abstract class Dest {
         /**
          * Подготавливает слот к использованию. Может создаваться новый одноразовый слот.
          */
@@ -126,20 +122,24 @@ class Items {
     /**
      * Слот - это функциональная единица для манипуляции регистрами.
      */
-    abstract class Item {
+    public abstract class Item {
 
         /**
          * Превращает слот в логический.
          */
-        CondItem cond(Dest dest) {
+        CondItem toCond(Dest dest) {
             throw new UnsupportedOperationException(getClass().getName());
         }
 
         /**
          * Возвращает индекс слота.
          */
-        int index() {
+        public int index() {
             throw new UnsupportedOperationException(getClass().getName());
+        }
+
+        public boolean alive() {
+            return true;
         }
 
         /**
@@ -154,10 +154,22 @@ class Items {
     /**
      * Пустой предмет. Ничего не удерживает, ничего не освобождает.
      */
-    class EmptyItem extends Item {
+    class GraphItem extends Item {
+        private boolean alive = true;
+
+        GraphItem aliveness(boolean state) {
+            alive = state;
+            return this;
+        }
+
         @Override
         int use() {
             return -1;
+        }
+
+        @Override
+        public boolean alive() {
+            return alive;
         }
     }
 
@@ -172,7 +184,7 @@ class Items {
         }
 
         @Override
-        CondItem cond(Dest dest) {
+        CondItem toCond(Dest dest) {
             int unitIndex = code.acquire();
             int itemIndex = use();
             emitter.emitBB(const_0, unitIndex);
@@ -182,7 +194,7 @@ class Items {
         }
 
         @Override
-        int index() {
+        public int index() {
             return index;
         }
     }
@@ -254,7 +266,7 @@ class Items {
         }
 
         @Override
-        CondItem cond(Dest dest) {
+        CondItem toCond(Dest dest) {
             this.dest = dest;
             return this;
         }
