@@ -30,27 +30,31 @@ public class Main {
         Code code = new Code();
         CodeEmitter emitter = new CodeEmitter();
         Gen gen = new Gen(code, emitter);
+        long ctx = System.nanoTime();
         Items.Item resultItem = gen.gen(parseResult.getAst());
         if (resultItem.alive()) {
             // Добавляем return
             gen.gen(new Ast.Return(0, null));
         }
+        long cty = System.nanoTime();
+        long ctm = (cty - ctx) / 1000;
 
         CodeData data = gen.getData();
         CodePrinter codePrinter = new CodePrinter();
         codePrinter.print(data.code, data.constantPool);
+        System.out.println("Compiled in " + ctm + " hs. Instructions: " + data.code.length);
 
         long[] memoryData = new long[256];
         BytecodeInterpreter interpreter = new BytecodeInterpreter();
 
         int n = 1;
         for (int i = 0; i < n; i++) {
-            long tx = System.nanoTime();
+            long etx = System.nanoTime();
             int result = interpreter.run(data.code, data.constantPool, 0, memoryData, 0, 10);
-            long ty = System.nanoTime();
+            long ety = System.nanoTime();
 
-            long hs = (ty - tx) / 1000;
-            System.out.println("Executed in " + hs + " hs. Result: " + memoryData[result]);
+            long etm = (ety - etx) / 1000;
+            System.out.println("Executed in " + etm + " hs. Result: " + memoryData[result]);
         }
     }
 }
