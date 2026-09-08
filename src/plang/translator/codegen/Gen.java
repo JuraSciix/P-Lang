@@ -54,9 +54,7 @@ public class Gen extends Visitor {
     public void visitCompound(Compound stmt) {
         boolean alive = true;
         for (Stmt child : stmt.children) {
-            Items.Item item = gen(child);
-            item.use();
-            if (!item.alive()) {
+            if (!gen(child).use().alive()) {
                 alive = false;
                 break;
             }
@@ -67,20 +65,17 @@ public class Gen extends Visitor {
     @Override
     public void visitIf(If stmt) {
         Items.CondItem cond = gen(stmt.cond).toCond(null).emitFalseJump();
-        Items.Item bodyItem = gen(stmt.body);
-        bodyItem.use();
-        boolean alive = true;
+        boolean thenAlive = gen(stmt.body).use().alive();
         if (stmt.elseBody != null) {
             Mark exitMark = emitter.mark(jump, null);
             cond.closeFalseJumps();
-            Items.Item elseBodyItem = gen(stmt.elseBody);
-            elseBodyItem.use();
+            boolean elseAlive = gen(stmt.elseBody).use().alive();
             emitter.close(exitMark);
-            alive = bodyItem.alive() && elseBodyItem.alive();
+            resultItem = items.graph().aliveness(thenAlive && elseAlive);
         } else {
             cond.closeFalseJumps();
+            resultItem = items.graph();
         }
-        resultItem = items.graph().aliveness(alive);
     }
 
     @Override
@@ -96,7 +91,7 @@ public class Gen extends Visitor {
     @Override
     public void visitReturn(Return stmt) {
         Items.Item item = (stmt.expr != null) ? gen(stmt.expr) : items.direct().storeConst(0L);
-        emitter.emitBB(ret, item.use());
+        emitter.emitBB(ret, item.use().index());
         resultItem = items.graph().aliveness(false);
     }
 
@@ -136,8 +131,8 @@ public class Gen extends Visitor {
                 Items.Item lhsItem = gen(stmt.lhs);
                 Items.Item rhsItem = gen(stmt.rhs);
 
-                int lhsIndex = lhsItem.use();
-                int rhsIndex = rhsItem.use();
+                int lhsIndex = lhsItem.use().index();
+                int rhsIndex = rhsItem.use().index();
 
                 int opcode = AstInfo.opcodeFromTag(stmt.tag);
                 if (AstInfo.isComparing(stmt.tag)) {
@@ -160,7 +155,7 @@ public class Gen extends Visitor {
                 resultItem = item.toCond(destItem).negate();
                 break;
             case NEG:
-                int index = item.use();
+                int index = item.use().index();
                 Items.Item dest = destItem.prepare();
                 emitter.emitBBB(neg, index, dest.index());
                 resultItem = dest;

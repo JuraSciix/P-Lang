@@ -132,6 +132,14 @@ public class Items {
         }
 
         /**
+         * Объявляет регистр использованным.
+         * После этого регистр может автоматически освободиться.
+         */
+        Item use() {
+            throw new UnsupportedOperationException(getClass().getName());
+        }
+
+        /**
          * Возвращает индекс слота.
          */
         public int index() {
@@ -140,14 +148,6 @@ public class Items {
 
         public boolean alive() {
             return true;
-        }
-
-        /**
-         * Объявляет регистр использованным.
-         * После этого регистр может автоматически освободиться.
-         */
-        int use() {
-            return index();
         }
     }
 
@@ -163,8 +163,8 @@ public class Items {
         }
 
         @Override
-        int use() {
-            return -1;
+        Item use() {
+            return this;
         }
 
         @Override
@@ -186,17 +186,19 @@ public class Items {
         @Override
         CondItem toCond(Dest dest) {
             int unitIndex = code.acquire();
-            int itemIndex = use();
             emitter.emitBB(const_0, unitIndex);
-            emitter.emitBBB(cmp_ne, itemIndex, unitIndex);
+            emitter.emitBBB(cmp_ne, index(), unitIndex);
             code.release(unitIndex);
             return new CondItem(jmp_z, dest);
         }
 
         @Override
-        public int index() {
-            return index;
+        Item use() {
+            return this;
         }
+
+        @Override
+        public int index() { return index; }
     }
 
     /**
@@ -210,10 +212,9 @@ public class Items {
         }
 
         @Override
-        int use() {
-            int index = index();
-            code.release(index);
-            return index;
+        Item use() {
+            code.release(index());
+            return this;
         }
     }
 
@@ -231,14 +232,6 @@ public class Items {
             this.dest = dest;
         }
 
-        CondItem negate() {
-            opcode = OPCodes.negate(opcode);
-            Mark tmp = falseMarks;
-            falseMarks = trueMarks;
-            trueMarks = tmp;
-            return this;
-        }
-
         CondItem emitFalseJump() {
             emitter.emitBS(opcode, 0);
             falseMarks = emitter.mark(falseMarks);
@@ -250,6 +243,14 @@ public class Items {
             emitter.emitBS(OPCodes.negate(opcode), 0);
             trueMarks = emitter.mark(trueMarks);
             emitter.close(falseMarks);
+            return this;
+        }
+
+        CondItem negate() {
+            opcode = OPCodes.negate(opcode);
+            Mark tmp = falseMarks;
+            falseMarks = trueMarks;
+            trueMarks = tmp;
             return this;
         }
 
@@ -275,17 +276,17 @@ public class Items {
         }
 
         @Override
-        int use() {
-            int destIndex = dest.prepare().use();
+        Item use() {
+            Item item = dest.prepare();
             emitter.emitBS(opcode, 0);
             Mark elseMark = emitter.mark(falseMarks);
             emitter.close(trueMarks);
-            emitter.emitBB(const_1, destIndex);
+            emitter.emitBB(const_1, item.index());
             Mark exitMark = emitter.mark(jump, null);
             emitter.close(elseMark);
-            emitter.emitBB(const_0, destIndex);
+            emitter.emitBB(const_0, item.index());
             emitter.close(exitMark);
-            return destIndex;
+            return item;
         }
     }
 }
