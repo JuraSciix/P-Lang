@@ -6,15 +6,17 @@ public class Items {
     private final Code code;
     private final CodeEmitter emitter;
     private final ConstTable constTable;
-
+    private final DirectDest directDest;
     Items(Code code, CodeEmitter emitter, ConstTable constTable) {
         this.code = code;
         this.emitter = emitter;
         this.constTable = constTable;
+
+        directDest = new DirectDest();
     }
 
     DirectDest direct() {
-        return new DirectDest();
+        return directDest;
     }
 
     StableDest stable(StableItem item) {
