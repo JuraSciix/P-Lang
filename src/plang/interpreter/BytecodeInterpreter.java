@@ -115,7 +115,7 @@ public final class BytecodeInterpreter {
 
                 case jmp_z: case jmp_nz: {
                     cp += 3;
-                    if (test ^ (opcode == jmp_nz)) {
+                    if (test ^ (opcode == jmp_z)) {
                         cp = fetchUS(code, cp - 2);
                     }
                     continue;
