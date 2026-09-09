@@ -11,29 +11,26 @@ import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 
+import static java.util.Arrays.stream;
+
 public class Main {
-    private static final boolean PRINT_AST = true;
+    private static final int LEVEL_LEXER = 1;
+    private static final int LEVEL_PARSER = 2;
+    private static final int LEVEL_CODEGEN = 3;
+    private static final int LEVEL_INTERPRETER = 4;
+
+    private static final boolean PRINT_AST = false;
     private static final boolean PRINT_ASM = true;
-    private static final boolean MEASURE_LEXER = false;
-    private static final boolean MEASURE_PARSER = false;
-    private static final boolean MEASURE_CODEGEN = false;
-    private static final boolean MEASURE_INTERPRETER = false;
+    private static final int MEASURE_LEVEL = LEVEL_INTERPRETER;
 
     public static void main(String[] args) throws IOException {
         String name = "foo.pl";
         CharBuffer content = IOUtils.readCharBufferFromPath(
                 Paths.get("input", name),
                 StandardCharsets.UTF_8);
-        if (MEASURE_LEXER) {
-            measureLexer(name, content);
-        }
-
+        measure(name, content, 2, MEASURE_LEVEL);
         Lexer lexer = new Lexer();
         LexResult lexResult = lexer.tokenize(name, content);
-        if (MEASURE_PARSER) {
-            measureParser(lexResult);
-        }
-
         Parser parser = new Parser();
         ParseResult parseResult = parser.parse(lexResult);
         if (PRINT_AST) {
@@ -41,19 +38,11 @@ public class Main {
             parseResult.getAst().accept(printVisitor);
             printVisitor.flush();
         }
-        if (MEASURE_CODEGEN) {
-            measureGen(parseResult);
-        }
-
         CodeData data = translate(parseResult);
         if (PRINT_ASM) {
             CodePrinter codePrinter = new CodePrinter();
             codePrinter.print(data.code, data.constantPool);
         }
-        if (MEASURE_INTERPRETER) {
-            measureRun(data);
-        }
-
         long result = run(data);
         System.out.println("Result: " + result);
     }
@@ -78,73 +67,66 @@ public class Main {
         return memoryData[result];
     }
 
-    private static void measureLexer(String name, CharBuffer content) {
-        long max = Long.MIN_VALUE;
-        long min = Long.MAX_VALUE;
-        Lexer lexer = new Lexer();
-        for (int i = 0; i < 10; i++) {
-            long tx = System.nanoTime();
-            for (int j = 0; j < 10; j++) {
-                lexer.tokenize(name, content);
+    private static void measure(String name, CharBuffer content, int rep, int level) {
+        if (level < LEVEL_LEXER) return;
+        long[] lexMeasures = new long[rep];
+        long[] parseMeasures = new long[rep];
+        long[] genMeasures = new long[rep];
+        long[] runMeasures = new long[rep];
+
+        for (int i = 0; i < rep; i++) {
+            Lexer lexer = new Lexer();
+            long lexTx = System.nanoTime();
+            LexResult lexResult = lexer.tokenize(name, content);
+            long lexTy = System.nanoTime();
+            lexMeasures[i] = lexTy - lexTx;
+
+            ParseResult parseResult = null;
+            if (level >= LEVEL_PARSER) {
+                Parser parser = new Parser();
+                long parseTx = System.nanoTime();
+                parseResult = parser.parse(lexResult);
+                long parseTy = System.nanoTime();
+                parseMeasures[i] = parseTy - parseTx;
             }
-            long ty = System.nanoTime();
-            long dt = (ty - tx) / (10 * 1000);
-            max = Math.max(max, dt);
-            min = Math.min(min, dt);
+
+            CodeData data = null;
+            if (level >= LEVEL_CODEGEN) {
+                Code code = new Code();
+                CodeEmitter emitter = new CodeEmitter();
+                Gen gen = new Gen(code, emitter);
+                long genTx = System.nanoTime();
+                Items.Item item = gen.gen(parseResult.getAst());
+                if (item.alive()) {
+                    gen.gen(new Ast.Return(0, null));
+                }
+                data = gen.getData();
+                long genTy = System.nanoTime();
+                genMeasures[i] = genTy - genTx;
+            }
+
+            if (level >= LEVEL_INTERPRETER) {
+                long[] memoryData = new long[256];
+                BytecodeInterpreter interpreter = new BytecodeInterpreter();
+                long runTx = System.nanoTime();
+                interpreter.run(data.code, data.constantPool, 0, memoryData, 0, 10);
+                long runTy = System.nanoTime();
+                runMeasures[i] = runTy - runTx;
+            }
         }
-        System.out.println("Lexing measurement: " + max + " - " + min + " mcs");
+
+        printMeasures("Lexing", lexMeasures);
+        if (level >= LEVEL_PARSER) printMeasures("Parsing", parseMeasures);
+        if (level >= LEVEL_CODEGEN) printMeasures("Codegen", genMeasures);
+        if (level >= LEVEL_INTERPRETER) printMeasures("Run", runMeasures);
     }
 
-    private static void measureParser(LexResult lexResult) {
-        long max = Long.MIN_VALUE;
-        long min = Long.MAX_VALUE;
-        Parser parser = new Parser();
-        for (int i = 0; i < 10; i++) {
-            long tx = System.nanoTime();
-            for (int j = 0; j < 10; j++) {
-                parser.parse(lexResult);
-            }
-            long ty = System.nanoTime();
-            long dt = (ty - tx) / (10 * 1000);
-            max = Math.max(max, dt);
-            min = Math.min(min, dt);
-        }
-        System.out.println("Parsing measurement: " + max + " - " + min + " mcs");
-    }
-
-    private static void measureGen(ParseResult parseResult) {
-        long max = Long.MIN_VALUE;
-        long min = Long.MAX_VALUE;
-        for (int i = 0; i < 10; i++) {
-            Code code = new Code();
-            CodeEmitter emitter = new CodeEmitter();
-            Gen gen = new Gen(code, emitter);
-            long tx = System.nanoTime();
-            for (int j = 0; j < 5; j++) {
-                parseResult.getAst().accept(gen);
-            }
-            long ty = System.nanoTime();
-            long dt = (ty - tx) / (5 * 1000);
-            max = Math.max(max, dt);
-            min = Math.min(min, dt);
-        }
-        System.out.println("Generating measurement: " + max + " - " + min + " mcs");
-    }
-
-    private static void measureRun(CodeData data) {
-        long max = Long.MIN_VALUE;
-        long min = Long.MAX_VALUE;
-
-        long[] memoryData = new long[256];
-        BytecodeInterpreter interpreter = new BytecodeInterpreter();
-        for (int i = 0; i < 10; i++) {
-            long tx = System.nanoTime();
-            interpreter.run(data.code, data.constantPool, 0, memoryData, 0, 10);
-            long ty = System.nanoTime();
-            long dt = (ty - tx) / 1000;
-            max = Math.max(max, dt);
-            min = Math.min(min, dt);
-        }
-        System.out.println("Executed measurement: " + max + " - " + min + " mcs");
+    private static void printMeasures(String title, long[] measures) {
+        long best = stream(measures).min().orElse(0);
+        long worth = stream(measures).max().orElse(0);
+        System.out.printf("%-12s %-16s %-16s %n",
+                title,
+                "top " + best / 1000 + " hs",
+                "bot " + worth / 1000 + " hs");
     }
 }
