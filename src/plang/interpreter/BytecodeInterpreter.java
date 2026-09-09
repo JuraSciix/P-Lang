@@ -124,6 +124,7 @@ public final class BytecodeInterpreter {
                 case ret:
                     state = STATE_RETURN;
                     returnAddress = off + fetchUB(code, cp + 1);
+                    cp += 2;
                     break;
 
                 default: throw new AssertionError("Illegal opcode");
