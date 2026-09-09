@@ -27,4 +27,26 @@ public final class Name {
     void setItem(Items.StableItem item) {
         this.mItem = item;
     }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || obj.getClass() != getClass()) {
+            return false;
+        }
+        Name name = (Name) obj;
+        return name.value.equals(value);
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }
