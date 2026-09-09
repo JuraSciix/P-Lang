@@ -76,7 +76,7 @@ public class Main {
                 lexer.tokenize(name, content);
             }
             long ty = System.nanoTime();
-            long dt = (ty - tx) / 10;
+            long dt = (ty - tx) / (10 * 1000);
             max = Math.max(max, dt);
             min = Math.min(min, dt);
         }
@@ -93,7 +93,7 @@ public class Main {
                 parser.parse(lexResult);
             }
             long ty = System.nanoTime();
-            long dt = (ty - tx) / 10;
+            long dt = (ty - tx) / (10 * 1000);
             max = Math.max(max, dt);
             min = Math.min(min, dt);
         }
