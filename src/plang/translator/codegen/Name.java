@@ -1,5 +1,7 @@
 package plang.translator.codegen;
 
+import java.util.Objects;
+
 /**
  * Унифицированный объект идентификатора.
  * Создается парсером строго в единственном экземпляре на каждое значение {@code name}.
@@ -9,7 +11,7 @@ public final class Name {
     private Items.StableItem mItem = null;
 
     public Name(String value) {
-        this.value = value;
+        this.value = Objects.requireNonNull(value);
     }
 
     public String value() {
