@@ -42,6 +42,8 @@ public class Lexer {
     }
 
     public LexResult tokenize(String sourceName, CharBuffer content) {
+        content.mark();
+
         StringReader reader = new StringReader(content);
         StringBuilder buffer = new StringBuilder();
 
@@ -123,6 +125,8 @@ public class Lexer {
                     }
             }
         }
+
+        content.reset();
 
         LineNumberMap lineNumberMap = new LineNumberMap(new int[0]); // todo
         return new LexResult(sourceName, lineNumberMap, tokens, tokensData);
