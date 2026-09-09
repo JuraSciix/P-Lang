@@ -67,7 +67,7 @@ public class Gen extends Visitor {
             test.closeFalseJumps();
             boolean elseAlive = gen(tree.elseBody).use().alive();
             emitter.close(exitMark);
-            resultItem = items.graph().aliveness(thenAlive && elseAlive);
+            resultItem = items.graph().aliveness(thenAlive || elseAlive);
         } else {
             test.closeFalseJumps();
             resultItem = items.graph();
