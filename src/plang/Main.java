@@ -12,19 +12,27 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 
 public class Main {
-    private static final boolean PRINT_AST = false;
-    private static final boolean PRINT_ASM = false;
+    private static final boolean PRINT_AST = true;
+    private static final boolean PRINT_ASM = true;
+    private static final boolean MEASURE_LEXER = false;
+    private static final boolean MEASURE_PARSER = false;
+    private static final boolean MEASURE_CODEGEN = false;
+    private static final boolean MEASURE_INTERPRETER = false;
 
     public static void main(String[] args) throws IOException {
         String name = "foo.pl";
         CharBuffer content = IOUtils.readCharBufferFromPath(
                 Paths.get("input", name),
                 StandardCharsets.UTF_8);
-        measureLexer(name, content);
+        if (MEASURE_LEXER) {
+            measureLexer(name, content);
+        }
 
         Lexer lexer = new Lexer();
         LexResult lexResult = lexer.tokenize(name, content);
-        measureParser(lexResult);
+        if (MEASURE_PARSER) {
+            measureParser(lexResult);
+        }
 
         Parser parser = new Parser();
         ParseResult parseResult = parser.parse(lexResult);
@@ -33,14 +41,18 @@ public class Main {
             parseResult.getAst().accept(printVisitor);
             printVisitor.flush();
         }
-        measureGen(parseResult);
+        if (MEASURE_CODEGEN) {
+            measureGen(parseResult);
+        }
 
         CodeData data = translate(parseResult);
         if (PRINT_ASM) {
             CodePrinter codePrinter = new CodePrinter();
             codePrinter.print(data.code, data.constantPool);
         }
-        measureRun(data);
+        if (MEASURE_INTERPRETER) {
+            measureRun(data);
+        }
 
         long result = run(data);
         System.out.println("Result: " + result);
