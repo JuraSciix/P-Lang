@@ -16,6 +16,6 @@ public final class Bytes {
      * Unsigned Short.
      */
     public static int fetchUS(byte[] arr, int off) {
-        return fetchUB(arr, off) | fetchUB(arr, off + 1) << 8;
+        return arr[off] & 0xff | (arr[off + 1] & 0xff) << 8;
     }
 }
