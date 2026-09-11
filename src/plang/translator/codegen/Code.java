@@ -2,12 +2,12 @@ package plang.translator.codegen;
 
 public class Code {
     private final CodeEmitter emitter;
-    private final Arena arena;
+    private final CodeArena arena;
     private final ConstTable constTable;
 
     public Code() {
         emitter = new CodeEmitter();
-        arena = new Arena();
+        arena = new CodeArena();
         constTable = new ConstTable();
     }
 
@@ -15,7 +15,7 @@ public class Code {
         return emitter;
     }
 
-    public Arena arena() {
+    public CodeArena arena() {
         return arena;
     }
 
