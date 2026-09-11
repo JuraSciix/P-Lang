@@ -1,24 +1,29 @@
 package plang.translator;
 
+import java.nio.CharBuffer;
 import java.util.Collections;
 import java.util.List;
 
 public final class LexResult {
 
     private final String sourceName;
+    private final CharBuffer content;
     private final LineNumberMap lineNumberMap;
     private final List<Token> tokens;
-    private final List<TokenData> data;
 
-    public LexResult(String sourceName, LineNumberMap lineNumberMap, List<Token> tokens, List<TokenData> data) {
+    public LexResult(String sourceName, CharBuffer content, LineNumberMap lineNumberMap, List<Token> tokens) {
         this.sourceName = sourceName;
+        this.content = content;
         this.lineNumberMap = lineNumberMap;
         this.tokens = tokens;
-        this.data = data;
     }
 
     public String getSourceName() {
         return sourceName;
+    }
+
+    public CharBuffer getContent() {
+        return content;
     }
 
     public LineNumberMap getLineNumberMap() {
@@ -29,7 +34,4 @@ public final class LexResult {
         return Collections.unmodifiableList(tokens);
     }
 
-    public List<TokenData> getData() {
-        return Collections.unmodifiableList(data);
-    }
 }

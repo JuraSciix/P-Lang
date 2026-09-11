@@ -42,12 +42,9 @@ public class Lexer {
     }
 
     public LexResult tokenize(String sourceName, CharBuffer content) {
-        content.mark();
-
         StringReader reader = new StringReader(content);
 
         List<Token> tokens = new ArrayList<>();
-        List<TokenData> tokensData = new ArrayList<>();
 
         while (reader.hasRemaining()) {
             int pos = reader.getPosition();
@@ -59,7 +56,7 @@ public class Lexer {
 
                 case '\n':
                     reader.step();
-                    tokens.add(new Token(pos, SEP));
+                    tokens.add(new Token(pos, pos + 1, SEP));
                     break;
 
                 // Межстрочное соединение
@@ -75,28 +72,27 @@ public class Lexer {
                 case '0':
                     // Числа с нуля (кроме самого нуля) начинаться не могут.
                     reader.step();
-                    tokens.add(new Token(pos, INTEGER));
-                    tokensData.add(new TokenData(pos, "0"));
+                    tokens.add(new Token(pos, pos + 1, INTEGER));
                     break;
 
                 case '(':
                     reader.step();
-                    tokens.add(new Token(pos, LPAREN));
+                    tokens.add(new Token(pos, pos + 1, LPAREN));
                     break;
 
                 case ')':
                     reader.step();
-                    tokens.add(new Token(pos, RPAREN));
+                    tokens.add(new Token(pos, pos + 1, RPAREN));
                     break;
 
                 case '{':
                     reader.step();
-                    tokens.add(new Token(pos, LBRACE));
+                    tokens.add(new Token(pos, pos + 1, LBRACE));
                     break;
 
                 case '}':
                     reader.step();
-                    tokens.add(new Token(pos, RBRACE));
+                    tokens.add(new Token(pos, pos + 1, RBRACE));
                     break;
 
                 default:
@@ -104,22 +100,16 @@ public class Lexer {
                     if (isDigit(ch)) {
                         afterDigit(reader);
                         int endPos = reader.getPosition();
-                        tokens.add(new Token(pos, INTEGER));
-                        tokensData.add(new TokenData(pos,
-                                reader.subseq(pos, endPos)
-                                ));
+                        tokens.add(new Token(pos, endPos, INTEGER));
                     } else if (isAlpha(ch) || isSpecial1(ch)) {
                         afterIdentifierPart(reader);
                         int endPos = reader.getPosition();
-                        CharSequence csq = reader.subseq(pos, endPos);
-                        if (keywordMap.containsKey(csq)) {
-                            tokens.add(new Token(pos, keywordMap.get(csq)));
-                        } else {
-                            tokens.add(new Token(pos, IDENTIFIER));
-                            tokensData.add(new TokenData(pos, csq));
-                        }
+                        CharSequence csq = reader.subseq(pos, endPos).toString();
+                        tokens.add(new Token(pos, endPos, keywordMap.getOrDefault(csq, IDENTIFIER)));
                     } else if (isSpecial2(ch)) {
-                        tokens.add(new Token(pos, afterSpecial2(reader)));
+                        TokenType type = afterSpecial2(reader);
+                        int endPos = reader.getPosition();
+                        tokens.add(new Token(pos, endPos, type));
                     } else {
                         throw new IllegalArgumentException(
                                 String.format("Illegal character U+%04x", ch));
@@ -127,10 +117,8 @@ public class Lexer {
             }
         }
 
-        content.reset();
-
         LineNumberMap lineNumberMap = new LineNumberMap(new int[0]); // todo
-        return new LexResult(sourceName, lineNumberMap, tokens, tokensData);
+        return new LexResult(sourceName, content, lineNumberMap, tokens);
     }
 
     private void afterBackslash(StringReader reader) {

@@ -1,7 +1,5 @@
 package plang.translator;
 
-import plang.utils.CharSubSequence;
-
 import java.nio.CharBuffer;
 
 public final class StringReader {
@@ -37,6 +35,6 @@ public final class StringReader {
     }
 
     public CharSequence subseq(int from, int to) {
-        return new CharSubSequence(content, from, to);
+        return content.subSequence(from, to);
     }
 }

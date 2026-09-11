@@ -1,11 +1,12 @@
 package plang.translator;
 
 public final class Token {
-    public final int pos;
+    public final int pos, endPos;
     public final TokenType type;
 
-    public Token(int pos, TokenType type) {
+    public Token(int pos, int endPos, TokenType type) {
         this.pos = pos;
+        this.endPos = endPos;
         this.type = type;
     }
 

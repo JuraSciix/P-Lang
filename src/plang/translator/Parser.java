@@ -18,7 +18,8 @@ public class Parser {
 
     public ParseResult parse(LexResult lexResult) {
         List<Stmt> statements = new ArrayList<>();
-        TokenReader reader = new TokenReader(lexResult.getTokens(), lexResult.getData());
+        TokenReader reader = new TokenReader(
+                lexResult.getContent(), lexResult.getTokens());
 
         while (reader.hasRemaining()) {
             Token tk = reader.currentToken();

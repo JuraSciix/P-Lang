@@ -1,16 +1,16 @@
 package plang.translator;
 
+import java.nio.CharBuffer;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 public final class TokenReader {
+    private final CharBuffer content;
     private final List<Token> tokens;
-    private final List<TokenData> data;
     private int pos = 0;
 
-    public TokenReader(List<Token> tokens, List<TokenData> data) {
+    public TokenReader(CharBuffer content, List<Token> tokens) {
+        this.content = content;
         this.tokens = tokens;
-        this.data = data;
     }
 
     public boolean hasRemaining() {
@@ -34,14 +34,6 @@ public final class TokenReader {
     }
 
     public CharSequence getTokenData(Token token) {
-        // Заметка: можно использовать бинарный поиск,
-        // но простоты ради будет линейный.
-        for (TokenData td : data) {
-            if (token.pos == td.pos) {
-                return td.data;
-            }
-        }
-
-        throw new NoSuchElementException();
+        return content.subSequence(token.pos, token.endPos);
     }
 }
