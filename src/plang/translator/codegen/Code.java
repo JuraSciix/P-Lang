@@ -2,9 +2,25 @@ package plang.translator.codegen;
 
 public class Code {
     private final CodeEmitter emitter;
+    private final Arena arena;
+    private final ConstTable constTable;
 
-    public Code(CodeEmitter emitter) {
-        this.emitter = emitter;
+    public Code() {
+        emitter = new CodeEmitter();
+        arena = new Arena();
+        constTable = new ConstTable();
+    }
+
+    public CodeEmitter emitter() {
+        return emitter;
+    }
+
+    public Arena arena() {
+        return arena;
+    }
+
+    public ConstTable constTable() {
+        return constTable;
     }
 
     /**
@@ -34,5 +50,12 @@ public class Code {
         for (Mark m = mark; m != null; m = m.prev) {
             emitter.setShortIndex(m.index, target);
         }
+    }
+
+    public CodeData toData() {
+        return new CodeData(
+                emitter().getCodeArray(),
+                constTable().getPoolArray()
+        );
     }
 }

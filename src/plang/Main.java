@@ -50,14 +50,14 @@ public class Main {
     private static CodeData translate(ParseResult parseResult) {
         // Все аллокации после выхода из метода должны освободиться
         CodeEmitter emitter = new CodeEmitter();
-        Code code = new Code(emitter);
-        Gen gen = new Gen(code, emitter);
+        Code code = new Code();
+        Gen gen = new Gen(code);
         Items.Item resultItem = gen.gen(parseResult.getAst());
         if (resultItem.alive()) {
             // Добавляем return
             gen.gen(new Ast.Return(0, null));
         }
-        return gen.getData();
+        return code.toData();
     }
 
     private static long run(CodeData data) {
@@ -92,15 +92,14 @@ public class Main {
 
             CodeData data = null;
             if (level >= LEVEL_CODEGEN) {
-                CodeEmitter emitter = new CodeEmitter();
-                Code code = new Code(emitter);
-                Gen gen = new Gen(code, emitter);
+                Code code = new Code();
+                Gen gen = new Gen(code);
                 long genTx = System.nanoTime();
                 Items.Item item = gen.gen(parseResult.getAst());
                 if (item.alive()) {
                     gen.gen(new Ast.Return(0, null));
                 }
-                data = gen.getData();
+                data = code.toData();
                 long genTy = System.nanoTime();
                 genMeasures[i] = genTy - genTx;
             }
