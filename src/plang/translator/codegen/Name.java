@@ -7,14 +7,14 @@ import java.util.Objects;
  * Создается парсером строго в единственном экземпляре на каждое значение {@code name}.
  */
 public final class Name {
-    private final String value;
+    private final CharSequence value;
     private Items.StableItem mItem = null;
 
-    public Name(String value) {
+    public Name(CharSequence value) {
         this.value = Objects.requireNonNull(value);
     }
 
-    public String value() {
+    public CharSequence value() {
         return value;
     }
 
@@ -49,6 +49,6 @@ public final class Name {
 
     @Override
     public String toString() {
-        return value;
+        return value.toString();
     }
 }

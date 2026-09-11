@@ -33,7 +33,7 @@ public final class TokenReader {
         pos--;
     }
 
-    public String getTokenData(Token token) {
+    public CharSequence getTokenData(Token token) {
         // Заметка: можно использовать бинарный поиск,
         // но простоты ради будет линейный.
         for (TokenData td : data) {

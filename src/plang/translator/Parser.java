@@ -14,7 +14,7 @@ import static plang.translator.TokenType.*;
 
 public class Parser {
     // Архитектура парсера: LL(2)
-    private final Map<String, Name> nameMap = new HashMap<>();
+    private final Map<CharSequence, Name> nameMap = new HashMap<>();
 
     public ParseResult parse(LexResult lexResult) {
         List<Stmt> statements = new ArrayList<>();
@@ -169,7 +169,7 @@ public class Parser {
 
         if (tk.hasType(INTEGER)) {
             reader.step();
-            long value = Long.parseLong(reader.getTokenData(tk));
+            long value = Long.parseLong(reader.getTokenData(tk).toString());
             return new Value(tk.pos, Tag.INT, value);
         }
 
@@ -183,7 +183,7 @@ public class Parser {
         throw new IllegalArgumentException("Unexpected token: " + tk.type + " at " + tk.pos);
     }
 
-    private Name nameOf(String value) {
+    private Name nameOf(CharSequence value) {
         if (!nameMap.containsKey(value)) {
             nameMap.put(value, new Name(value));
         }

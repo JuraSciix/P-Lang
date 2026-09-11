@@ -32,7 +32,7 @@ public class Lexer {
         }
     }
 
-    private final Map<String, TokenType> keywordMap = new HashMap<>();
+    private final Map<CharSequence, TokenType> keywordMap = new HashMap<>();
 
     public Lexer() {
         keywordMap.put("if", IF);

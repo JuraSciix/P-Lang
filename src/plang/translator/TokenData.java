@@ -8,9 +8,9 @@ package plang.translator;
  */
 public final class TokenData {
     public final int pos;
-    public final String data;
+    public final CharSequence data;
 
-    public TokenData(int pos, String data) {
+    public TokenData(int pos, CharSequence data) {
         this.pos = pos;
         this.data = data;
     }
