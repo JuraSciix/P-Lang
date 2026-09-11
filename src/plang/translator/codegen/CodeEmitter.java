@@ -13,66 +13,39 @@ public class CodeEmitter {
         return code.toArray();
     }
 
-    public void emitByte(int b) {
-        code.add((byte) b);
+    public void opcodeWithByteIndex(int opcode, int index) {
+        code.add((byte) opcode);
+        code.add((byte) index);
     }
 
-    public void emitShort(int s) {
-        code.add((byte) s);
-        code.add((byte) (s >> 8));
+    public void opcodeWithShortIndex(int opcode, int index) {
+        code.add((byte) opcode);
+        code.add((byte) index);
+        code.add((byte) (index >> 8));
     }
 
-    public void emitBB(int b1, int b2) {
-        emitByte(b1);
-        emitByte(b2);
+    public void opcodeWithShortIndexAndByteIndex(int opcode, int index1, int index2) {
+        code.add((byte) opcode);
+        code.add((byte) index1);
+        code.add((byte) (index1 >> 8));
+        code.add((byte) index2);
     }
 
-    public void emitBS(int b, int s) {
-        emitByte(b);
-        emitShort(s);
+    public void opcodeWithDoubleByteIndex(int opcode, int index1, int index2) {
+        code.add((byte) opcode);
+        code.add((byte) index1);
+        code.add((byte) index2);
     }
 
-    public void emitBSB(int b1, int s, int b2) {
-        emitByte(b1);
-        emitShort(s);
-        emitByte(b2);
+    public void opcodeWithTripleByteIndex(int opcode, int index1, int index2, int index3) {
+        code.add((byte) opcode);
+        code.add((byte) index1);
+        code.add((byte) index2);
+        code.add((byte) index3);
     }
 
-    public void emitBBB(int b1, int b2, int b3) {
-        emitByte(b1);
-        emitByte(b2);
-        emitByte(b3);
-    }
-
-    public void emitBBBB(int b1, int b2, int b3, int b4) {
-        emitByte(b1);
-        emitByte(b2);
-        emitByte(b3);
-        emitByte(b4);
-    }
-
-    public void setByte(int index, int value) {
-        code.set(index, (byte) value);
-    }
-
-    public void setShort(int index, int value) {
+    public void setShortIndex(int index, int value) {
         code.set(index, (byte) value);
         code.set(index + 1, (byte) (value >> 8));
-    }
-
-    public Mark mark(Mark prev) {
-        return new Mark(top() - 2, prev);
-    }
-
-    public Mark mark(int opcode, Mark prev) {
-        emitBS(opcode, 0);
-        return new Mark(top() - 2, prev);
-    }
-
-    public void close(Mark mark) {
-        int t = top();
-        for (Mark m = mark; m != null; m = m.prev) {
-            setShort(m.index, t);
-        }
     }
 }

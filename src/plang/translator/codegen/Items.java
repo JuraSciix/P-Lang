@@ -7,6 +7,7 @@ public class Items {
     private final CodeEmitter emitter;
     private final ConstTable constTable;
     private final DirectDest directDest;
+
     Items(Code code, CodeEmitter emitter, ConstTable constTable) {
         this.code = code;
         this.emitter = emitter;
@@ -85,16 +86,16 @@ public class Items {
         Item storeConst(long value) {
             OneTimeItem item = new OneTimeItem();
             if (-1L <= value && value <= 2L) {
-                emitter.emitBB(const_0 + (int) value, item.index());
+                emitter.opcodeWithByteIndex(const_0 + (int) value, item.index());
             } else {
-                emitter.emitBSB(load, constTable.lookup(value), item.index());
+                emitter.opcodeWithShortIndexAndByteIndex(load, constTable.lookup(value), item.index());
             }
             return item;
         }
     }
 
     /**
-     * Прямой слот. Используется для того, чтобы напрямую получать значения.
+     * Слот переменной. Запись будет осуществляться в переменную.
      */
     class StableDest extends Dest {
         final StableItem item;
@@ -110,16 +111,16 @@ public class Items {
 
         @Override
         Item storeStable(int stableIndex) {
-            emitter.emitBBB(mov, stableIndex, item.index());
+            emitter.opcodeWithDoubleByteIndex(mov, stableIndex, item.index());
             return new StableItem(stableIndex);
         }
 
         @Override
         Item storeConst(long value) {
             if (-1L <= value && value <= 2L) {
-                emitter.emitBB(const_0 + (int) value, item.index());
+                emitter.opcodeWithByteIndex(const_0 + (int) value, item.index());
             } else {
-                emitter.emitBSB(load, constTable.lookup(value), item.index);
+                emitter.opcodeWithShortIndexAndByteIndex(load, constTable.lookup(value), item.index);
             }
             return prepare();
         }
@@ -193,8 +194,8 @@ public class Items {
         CondItem toCond(Dest dest) {
             int unitIndex = code.acquire();
             use();
-            emitter.emitBB(const_0, unitIndex);
-            emitter.emitBBB(cmp_ne, index(), unitIndex);
+            emitter.opcodeWithByteIndex(const_0, unitIndex);
+            emitter.opcodeWithDoubleByteIndex(cmp_ne, index(), unitIndex);
             code.release(unitIndex);
             return new CondItem(jmp_z, dest);
         }
@@ -239,20 +240,6 @@ public class Items {
             this.dest = dest;
         }
 
-        CondItem emitFalseJump() {
-            emitter.emitBS(opcode, 0);
-            falseMarks = emitter.mark(falseMarks);
-            emitter.close(trueMarks);
-            return this;
-        }
-
-        CondItem emitTrueJump() {
-            emitter.emitBS(OPCodes.negate(opcode), 0);
-            trueMarks = emitter.mark(trueMarks);
-            emitter.close(falseMarks);
-            return this;
-        }
-
         CondItem negate() {
             opcode = OPCodes.negate(opcode);
             Mark tmp = falseMarks;
@@ -261,18 +248,25 @@ public class Items {
             return this;
         }
 
-        void closeFalseJumps() {
-            emitter.close(falseMarks);
-            falseMarks = null;
+        Mark emitFalseJump() {
+            Mark mark = code.jump(opcode, falseMarks);
+            code.close(trueMarks);
+            return mark;
         }
 
-        CondItem coalesceTrueJumps(CondItem item) {
-            trueMarks = Mark.merge(trueMarks, item.trueMarks);
+        Mark emitTrueJump() {
+            Mark mark = code.jump(OPCodes.negate(opcode), trueMarks);
+            code.close(falseMarks);
+            return mark;
+        }
+
+        CondItem coalesceTrueJumps(Mark trueMarks) {
+            this.trueMarks = Mark.merge(this.trueMarks, trueMarks);
             return this;
         }
 
-        CondItem coalesceFalseJumps(CondItem item) {
-            falseMarks = Mark.merge(falseMarks, item.falseMarks);
+        CondItem coalesceFalseJumps(Mark falseMarks) {
+            this.falseMarks = Mark.merge(this.falseMarks, falseMarks);
             return this;
         }
 
@@ -285,14 +279,13 @@ public class Items {
         @Override
         Item use() {
             Item item = dest.prepare();
-            emitter.emitBS(opcode, 0);
-            Mark elseMark = emitter.mark(falseMarks);
-            emitter.close(trueMarks);
-            emitter.emitBB(const_1, item.index());
-            Mark exitMark = emitter.mark(jump, null);
-            emitter.close(elseMark);
-            emitter.emitBB(const_0, item.index());
-            emitter.close(exitMark);
+            Mark elseMark = code.jump(opcode, falseMarks);
+            code.close(trueMarks);
+            emitter.opcodeWithByteIndex(const_1, item.index());
+            Mark exitMark = code.jump(jump, null);
+            code.close(elseMark);
+            emitter.opcodeWithByteIndex(const_0, item.index());
+            code.close(exitMark);
             return item;
         }
     }

@@ -5,6 +5,7 @@ import plang.translator.Ast.*;
 import static plang.interpreter.OPCodeList.*;
 
 public class Gen extends Visitor {
+    private final Code code;
     private final CodeEmitter emitter;
     private final ConstTable constTable;
     private final Items items;
@@ -13,11 +14,10 @@ public class Gen extends Visitor {
     Items.Dest destItem;
 
     public Gen(Code code, CodeEmitter emitter) {
+        this.code = code;
         this.emitter = emitter;
         constTable = new ConstTable();
         items = new Items(code, emitter, constTable);
-
-        destItem = items.direct();
     }
 
     public CodeData getData() {
@@ -60,16 +60,16 @@ public class Gen extends Visitor {
 
     @Override
     public void conditional(Conditional tree) {
-        Items.CondItem test = gen(tree.test).toCond(null).emitFalseJump();
+        Mark test = gen(tree.test).toCond(null).emitFalseJump();
         boolean thenAlive = gen(tree.body).use().alive();
         if (tree.elseBody != null) {
-            Mark exitMark = emitter.mark(jump, null);
-            test.closeFalseJumps();
+            Mark exitMark = code.jump(jump, null);
+            code.close(test);
             boolean elseAlive = gen(tree.elseBody).use().alive();
-            emitter.close(exitMark);
+            code.close(exitMark);
             resultItem = items.graph().aliveness(thenAlive || elseAlive);
         } else {
-            test.closeFalseJumps();
+            code.close(test);
             resultItem = items.graph();
         }
     }
@@ -77,17 +77,17 @@ public class Gen extends Visitor {
     @Override
     public void whileLoop(WhileLoop tree) {
         int startBci = emitter.top();
-        Items.CondItem test = gen(tree.test).toCond(null).emitFalseJump();
+        Mark test = gen(tree.test).toCond(null).emitFalseJump();
         gen(tree.body).use();
-        emitter.emitBS(jump, startBci);
-        test.closeFalseJumps();
+        code.close(code.jump(jump, null), startBci);
+        code.close(test);
         resultItem = items.graph();
     }
 
     @Override
     public void returnOp(Return tree) {
         Items.Item item = (tree.expr != null) ? gen(tree.expr) : items.direct().storeConst(0L);
-        emitter.emitBB(ret, item.use().index());
+        emitter.opcodeWithByteIndex(ret, item.use().index());
         resultItem = items.graph().aliveness(false);
     }
 
@@ -109,16 +109,14 @@ public class Gen extends Visitor {
     public void binaryOp(BinaryOp tree) {
         switch (tree.tag) {
             case CON: {
-                Items.CondItem lhsCond = gen(tree.lhs).toCond(null).emitFalseJump();
-                Items.CondItem rhsCond = gen(tree.rhs).toCond(destItem);
-                resultItem = rhsCond.coalesceFalseJumps(lhsCond);
+                Mark falseJumps = gen(tree.lhs).toCond(null).emitFalseJump();
+                resultItem = gen(tree.rhs).toCond(destItem).coalesceFalseJumps(falseJumps);
                 break;
             }
 
             case DIS: {
-                Items.CondItem lhsCond = gen(tree.lhs).toCond(null).emitTrueJump();
-                Items.CondItem rhsCond = gen(tree.rhs).toCond(destItem);
-                resultItem = rhsCond.coalesceTrueJumps(lhsCond);
+                Mark trueJumps = gen(tree.lhs).toCond(null).emitTrueJump();
+                resultItem = gen(tree.rhs).toCond(destItem).coalesceTrueJumps(trueJumps);
                 break;
             }
 
@@ -131,11 +129,11 @@ public class Gen extends Visitor {
 
                 int opcode = AstInfo.opcodeFromTag(tree.tag);
                 if (AstInfo.isComparing(tree.tag)) {
-                    emitter.emitBBB(opcode, lhsIndex, rhsIndex);
+                    emitter.opcodeWithDoubleByteIndex(opcode, lhsIndex, rhsIndex);
                     resultItem = items.cond(destItem);
                 } else {
                     Items.Item dest = destItem.prepare();
-                    emitter.emitBBBB(opcode, lhsIndex, rhsIndex, dest.index());
+                    emitter.opcodeWithTripleByteIndex(opcode, lhsIndex, rhsIndex, dest.index());
                     resultItem = dest;
                 }
             }
@@ -152,7 +150,7 @@ public class Gen extends Visitor {
             case NEG:
                 int index = item.use().index();
                 Items.Item dest = destItem.prepare();
-                emitter.emitBBB(neg, index, dest.index());
+                emitter.opcodeWithDoubleByteIndex(neg, index, dest.index());
                 resultItem = dest;
                 break;
         }

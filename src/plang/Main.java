@@ -49,8 +49,8 @@ public class Main {
 
     private static CodeData translate(ParseResult parseResult) {
         // Все аллокации после выхода из метода должны освободиться
-        Code code = new Code();
         CodeEmitter emitter = new CodeEmitter();
+        Code code = new Code(emitter);
         Gen gen = new Gen(code, emitter);
         Items.Item resultItem = gen.gen(parseResult.getAst());
         if (resultItem.alive()) {
@@ -92,8 +92,8 @@ public class Main {
 
             CodeData data = null;
             if (level >= LEVEL_CODEGEN) {
-                Code code = new Code();
                 CodeEmitter emitter = new CodeEmitter();
+                Code code = new Code(emitter);
                 Gen gen = new Gen(code, emitter);
                 long genTx = System.nanoTime();
                 Items.Item item = gen.gen(parseResult.getAst());
