@@ -6,12 +6,14 @@ public class Items {
     private final Code code;
     private final CodeEmitter emitter;
     private final ConstTable constTable;
+    private final Arena arena;
     private final DirectDest directDest;
 
-    Items(Code code, CodeEmitter emitter, ConstTable constTable) {
+    Items(Code code, CodeEmitter emitter, ConstTable constTable, Arena arena) {
         this.code = code;
         this.emitter = emitter;
         this.constTable = constTable;
+        this.arena = arena;
 
         directDest = new DirectDest();
     }
@@ -25,7 +27,7 @@ public class Items {
     }
 
     StableItem stableItem() {
-        return new StableItem(code.acquire());
+        return new StableItem(arena.acquire());
     }
 
     CondItem cond(Dest dest) {
@@ -192,11 +194,11 @@ public class Items {
 
         @Override
         CondItem toCond(Dest dest) {
-            int unitIndex = code.acquire();
+            int unitIndex = arena.acquire();
             use();
             emitter.opcodeWithByteIndex(const_0, unitIndex);
             emitter.opcodeWithDoubleByteIndex(cmp_ne, index(), unitIndex);
-            code.release(unitIndex);
+            arena.release(unitIndex);
             return new CondItem(jmp_z, dest);
         }
 
@@ -216,12 +218,12 @@ public class Items {
      */
     class OneTimeItem extends StableItem {
         OneTimeItem() {
-            super(code.acquire());
+            super(arena.acquire());
         }
 
         @Override
         Item use() {
-            code.release(index());
+            arena.release(index());
             return this;
         }
     }

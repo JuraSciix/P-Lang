@@ -17,7 +17,7 @@ public class Gen extends Visitor {
         this.code = code;
         this.emitter = emitter;
         constTable = new ConstTable();
-        items = new Items(code, emitter, constTable);
+        items = new Items(code, emitter, constTable, new Arena());
     }
 
     public CodeData getData() {
