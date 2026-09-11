@@ -51,6 +51,24 @@ public class LongArrayList {
         return "Index: " + index + ". Count: " + size();
     }
 
+    public int indexOf(long value) {
+        for (int i = 0; i < size(); i++) {
+            if (get(i) == value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int lastIndexOf(long value) {
+        for (int i = size() - 1; i >= 0; i--) {
+            if (get(i) == value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public long[] toArray() {
         return Arrays.copyOf(array, count);
     }

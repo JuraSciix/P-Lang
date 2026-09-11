@@ -54,8 +54,8 @@ public class Code {
 
     public CodeData toData() {
         return new CodeData(
-                emitter().getCodeArray(),
-                constTable().getPoolArray()
+                emitter().code().toArray(),
+                constTable().entries().toArray()
         );
     }
 }

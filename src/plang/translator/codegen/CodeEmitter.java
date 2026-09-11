@@ -2,15 +2,25 @@ package plang.translator.codegen;
 
 import plang.utils.ByteArrayList;
 
-public class CodeEmitter {
+public final class CodeEmitter {
     private final ByteArrayList code = new ByteArrayList();
 
-    public int top() {
-        return code.size();
+    /**
+     * Возвращает список байтов.
+     *
+     * @return Список байтов.
+     */
+    public ByteArrayList code() {
+        return code;
     }
 
-    public byte[] getCodeArray() {
-        return code.toArray();
+    /**
+     * Возвращает указатель на следующий байткод.
+     *
+     * @return Указатель на следующий байткод.
+     */
+    public int top() {
+        return code.size();
     }
 
     public void opcodeWithByteIndex(int opcode, int index) {
