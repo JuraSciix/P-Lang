@@ -4,25 +4,26 @@ import java.nio.CharBuffer;
 
 public final class StringReader {
     private final CharBuffer content;
+    private int pos = 0;
 
     public StringReader(CharBuffer content) {
         this.content = content;
     }
 
     public boolean hasRemaining() {
-        return content.hasRemaining();
+        return pos < content.remaining();
     }
 
     public int getPosition() {
-        return content.position();
+        return pos;
     }
 
     public char currentChar() {
-        return content.get(content.position());
+        return content.get(pos);
     }
 
     public void step() {
-        content.get();
+        pos++;
     }
 
     public boolean matches(char ch) {
