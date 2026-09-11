@@ -47,9 +47,8 @@ public class Main {
         System.out.println("Result: " + result);
     }
 
-    private static CodeData translate(ParseResult parseResult) {
+    static CodeData translate(ParseResult parseResult) {
         // Все аллокации после выхода из метода должны освободиться
-        CodeEmitter emitter = new CodeEmitter();
         Code code = new Code();
         Gen gen = new Gen(code);
         Items.Item resultItem = gen.gen(parseResult.getAst());
@@ -60,14 +59,15 @@ public class Main {
         return code.toData();
     }
 
-    private static long run(CodeData data) {
+    static long run(CodeData data) {
         long[] memoryData = new long[256];
         BytecodeInterpreter interpreter = new BytecodeInterpreter();
         int result = interpreter.run(data.code, data.constantPool, 0, memoryData, 0, 10);
         return memoryData[result];
     }
 
-    private static void measure(String name, CharBuffer content, int rep, int level) {
+    @SuppressWarnings("SameParameterValue")
+    static void measure(String name, CharBuffer content, int rep, int level) {
         if (level < LEVEL_LEXER) return;
         long[] lexMeasures = new long[rep];
         long[] parseMeasures = new long[rep];
@@ -120,7 +120,7 @@ public class Main {
         if (level >= LEVEL_INTERPRETER) printMeasures("Run", runMeasures);
     }
 
-    private static void printMeasures(String title, long[] measures) {
+    static void printMeasures(String title, long[] measures) {
         long best = stream(measures).min().orElse(0);
         long worth = stream(measures).max().orElse(0);
         System.out.printf("%-12s %-16s %-16s %n",
