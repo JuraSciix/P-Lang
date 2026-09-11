@@ -8,6 +8,17 @@ public class ParseHelper {
         return 0 <= type.compareTo(TokenType.PLUS) && type.compareTo(TokenType.BARBAR) <= 0;
     }
 
+    public static long parseLong(CharSequence csq) {
+        long result = 0L;
+        for (int i = 0; i < csq.length(); i++) {
+            char c = csq.charAt(i);
+            if (c != '_') {
+                result = result * 10L + (c - '0');
+            }
+        }
+        return result;
+    }
+
     public static Tag tagOf(TokenType type) {
         switch (type) {
             case PLUS: return Tag.ADD;

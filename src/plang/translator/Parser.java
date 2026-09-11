@@ -169,7 +169,7 @@ public class Parser {
 
         if (tk.hasType(INTEGER)) {
             reader.step();
-            long value = Long.parseLong(reader.getTokenData(tk).toString());
+            long value = parseLong(reader.getTokenData(tk));
             return new Value(tk.pos, Tag.INT, value);
         }
 

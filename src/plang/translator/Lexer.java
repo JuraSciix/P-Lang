@@ -45,7 +45,6 @@ public class Lexer {
         content.mark();
 
         StringReader reader = new StringReader(content);
-        StringBuilder buffer = new StringBuilder();
 
         List<Token> tokens = new ArrayList<>();
         List<TokenData> tokensData = new ArrayList<>();
@@ -103,19 +102,21 @@ public class Lexer {
                 default:
                     int ch = reader.currentChar();
                     if (isDigit(ch)) {
-                        afterDigit(reader, buffer);
+                        afterDigit(reader);
+                        int endPos = reader.getPosition();
                         tokens.add(new Token(pos, INTEGER));
-                        tokensData.add(new TokenData(pos, buffer.toString()));
-                        buffer.setLength(0); // clear
+                        tokensData.add(new TokenData(pos,
+                                reader.subseq(pos, endPos)
+                                ));
                     } else if (isAlpha(ch) || isSpecial1(ch)) {
-                        afterIdentifierPart(reader, buffer);
-                        String data = buffer.toString();
-                        buffer.setLength(0); // clear
-                        if (keywordMap.containsKey(data)) {
-                            tokens.add(new Token(pos, keywordMap.get(data)));
+                        afterIdentifierPart(reader);
+                        int endPos = reader.getPosition();
+                        CharSequence csq = reader.subseq(pos, endPos);
+                        if (keywordMap.containsKey(csq)) {
+                            tokens.add(new Token(pos, keywordMap.get(csq)));
                         } else {
                             tokens.add(new Token(pos, IDENTIFIER));
-                            tokensData.add(new TokenData(pos, data));
+                            tokensData.add(new TokenData(pos, csq));
                         }
                     } else if (isSpecial2(ch)) {
                         tokens.add(new Token(pos, afterSpecial2(reader)));
@@ -187,8 +188,7 @@ public class Lexer {
         }
     }
 
-    private void afterDigit(StringReader reader, StringBuilder buffer) {
-        buffer.append(reader.currentChar());
+    private void afterDigit(StringReader reader) {
         reader.step();
 
         while (reader.hasRemaining()) {
@@ -202,7 +202,6 @@ public class Lexer {
                 throw new IllegalArgumentException("Underscore is not allowed here");
             }
             if (isDigit(ch)) {
-                buffer.append(ch);
                 reader.step();
             } else {
                 break;
@@ -210,14 +209,12 @@ public class Lexer {
         }
     }
 
-    private void afterIdentifierPart(StringReader reader, StringBuilder buffer) {
-        buffer.append(reader.currentChar());
+    private void afterIdentifierPart(StringReader reader) {
         reader.step();
 
         while (reader.hasRemaining()) {
             char ch = reader.currentChar();
             if (isAlpha(ch) || isSpecial1(ch) || isDigit(ch)) {
-                buffer.append(ch);
                 reader.step();
             } else {
                 break;
