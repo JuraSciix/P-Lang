@@ -181,7 +181,7 @@ public class Parser {
             return new Parens(tk.pos, expr);
         }
 
-        throw new IllegalArgumentException("Unexpected token: " + tk.type + " at " + tk.pos);
+        throw new TranslatorException("Unexpected token: " + tk.type + " at " + tk.pos);
     }
 
     private Name nameOf(CharSequence value) {
@@ -199,9 +199,9 @@ public class Parser {
                 return;
             }
 
-            throw new IllegalArgumentException("Expected token " + type + ", but reached " + tk.type + " at " + tk.pos);
+            throw new TranslatorException("Expected token " + type + ", but reached " + tk.type + " at " + tk.pos);
         }
 
-        throw new IllegalArgumentException("Expected token " + type + ", but reached end of file");
+        throw new TranslatorException("Expected token " + type + ", but reached end of file");
     }
 }

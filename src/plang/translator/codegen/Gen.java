@@ -1,6 +1,7 @@
 package plang.translator.codegen;
 
 import plang.translator.Ast.*;
+import plang.translator.TranslatorException;
 
 import static plang.interpreter.OPCodeList.*;
 
@@ -151,7 +152,7 @@ public class Gen extends Visitor {
             case VAR: {
                 Name name = (Name) tree.value;
                 if (!name.hasItem()) {
-                    throw new IllegalArgumentException("Unresolved variable " + name);
+                    throw new TranslatorException("Unresolved variable " + name);
                 }
                 resultItem = destItem.storeStable(name.item().index());
                 break;

@@ -111,7 +111,7 @@ public class Lexer {
                         int endPos = reader.getPosition();
                         tokens.add(new Token(pos, endPos, type));
                     } else {
-                        throw new IllegalArgumentException(
+                        throw new TranslatorException(
                                 String.format("Illegal character U+%04x", ch));
                     }
             }
@@ -139,7 +139,7 @@ public class Lexer {
                     reader.step();
                     break;
                 default:
-                    throw new RuntimeException("Unexpected char after backslash");
+                    throw new TranslatorException("Unexpected char after backslash");
             }
         }
     }

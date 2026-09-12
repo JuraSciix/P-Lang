@@ -1,5 +1,7 @@
 package plang.translator.codegen;
 
+import plang.translator.TranslatorException;
+
 import java.util.BitSet;
 
 public final class CodeArena {
@@ -15,7 +17,7 @@ public final class CodeArena {
     public int acquire() {
         int index = field.nextSetBit(0);
         if (index < 0) {
-            throw new RuntimeException("No more free indexes");
+            throw new TranslatorException("No more free indexes");
         }
         field.clear(index);
         return index;
