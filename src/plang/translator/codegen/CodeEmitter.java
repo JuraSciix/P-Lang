@@ -1,5 +1,6 @@
 package plang.translator.codegen;
 
+import plang.translator.TranslatorException;
 import plang.utils.ByteArrayList;
 
 public final class CodeEmitter {
@@ -27,7 +28,7 @@ public final class CodeEmitter {
 
     private void ensureCapacity(int cap) {
         if (MAX_CAPACITY - code.size() < cap) {
-            throw new RuntimeException("Too big code");
+            throw new TranslatorException("Too big code");
         }
     }
 
