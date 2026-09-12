@@ -3,6 +3,8 @@ package plang.translator.codegen;
 import plang.utils.ByteArrayList;
 
 public final class CodeEmitter {
+    private static final int MAX_CAPACITY = 65536;
+
     private final ByteArrayList code = new ByteArrayList();
 
     /**
@@ -23,18 +25,27 @@ public final class CodeEmitter {
         return code.size();
     }
 
+    private void ensureCapacity(int cap) {
+        if (MAX_CAPACITY - code.size() < cap) {
+            throw new RuntimeException("Too big code");
+        }
+    }
+
     public void opcodeWithByteIndex(int opcode, int index) {
+        ensureCapacity(2);
         code.add((byte) opcode);
         code.add((byte) index);
     }
 
     public void opcodeWithShortIndex(int opcode, int index) {
+        ensureCapacity(3);
         code.add((byte) opcode);
         code.add((byte) index);
         code.add((byte) (index >> 8));
     }
 
     public void opcodeWithShortIndexAndByteIndex(int opcode, int index1, int index2) {
+        ensureCapacity(4);
         code.add((byte) opcode);
         code.add((byte) index1);
         code.add((byte) (index1 >> 8));
@@ -42,12 +53,14 @@ public final class CodeEmitter {
     }
 
     public void opcodeWithDoubleByteIndex(int opcode, int index1, int index2) {
+        ensureCapacity(3);
         code.add((byte) opcode);
         code.add((byte) index1);
         code.add((byte) index2);
     }
 
     public void opcodeWithTripleByteIndex(int opcode, int index1, int index2, int index3) {
+        ensureCapacity(4);
         code.add((byte) opcode);
         code.add((byte) index1);
         code.add((byte) index2);
