@@ -183,6 +183,8 @@ public class Gen extends Visitor {
 
     @Override
     public void parens(Parens tree) {
-        resultItem = gen(tree.expr);
+        // Вызывать gen() не обязательно.
+        // Скобки абсолютно прозрачны для этого метода
+        tree.expr.accept(this);
     }
 }
