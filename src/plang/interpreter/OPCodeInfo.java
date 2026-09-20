@@ -9,16 +9,16 @@ public final class OPCodeInfo {
         INFO[nop] = make("nop");
 
         // Бинарные и унарные операции.
-        INFO[add] = make("add", Param.REG, Param.REG, Param.REG);
-        INFO[sub] = make("sub", Param.REG, Param.REG, Param.REG);
-        INFO[mul] = make("mul", Param.REG, Param.REG, Param.REG);
-        INFO[div] = make("div", Param.REG, Param.REG, Param.REG);
-        INFO[rem] = make("rem", Param.REG, Param.REG, Param.REG);
-        INFO[bit_and] = make("bit-and", Param.REG, Param.REG, Param.REG);
-        INFO[bit_or] = make("bit-or", Param.REG, Param.REG, Param.REG);
-        INFO[bit_xor] = make("bit-xor", Param.REG, Param.REG, Param.REG);
-        INFO[bit_inv] = make("bit-inv", Param.REG, Param.REG, Param.REG);
-        INFO[neg] = make("neg", Param.REG, Param.REG);
+        INFO[add] = make("add", Param.REG, Param.REG);
+        INFO[sub] = make("sub", Param.REG, Param.REG);
+        INFO[mul] = make("mul", Param.REG, Param.REG);
+        INFO[div] = make("div", Param.REG, Param.REG);
+        INFO[rem] = make("rem", Param.REG, Param.REG);
+        INFO[bit_and] = make("bit-and", Param.REG, Param.REG);
+        INFO[bit_or] = make("bit-or", Param.REG, Param.REG);
+        INFO[bit_xor] = make("bit-xor", Param.REG, Param.REG);
+        INFO[bit_inv] = make("bit-inv", Param.REG);
+        INFO[neg] = make("neg", Param.REG);
 
         INFO[const_m1] = make("const_m1", Param.REG);
         INFO[const_0] = make("const_0", Param.REG);
@@ -42,13 +42,16 @@ public final class OPCodeInfo {
         // Безусловный прыжок.
         INFO[jump] = make("jump", Param.BCI);
 
-        // Условный прыжок, если флаг активен.
+        // Условный прыжок, если флаг НЕ активен.
         INFO[jmp_z] = make("jmp-z", Param.BCI);
 
-        // Условный прыжок, если флаг неактивен.
+        // Условный прыжок, если флаг активен.
         INFO[jmp_nz] = make("jmp-nz", Param.BCI);
 
-        INFO[ret] = make("ret", Param.REG);
+        // Перед ret состояние локальных регистров не имеет значения,
+        // поэтому для инструкции ret необходимо перенести значение
+        // в нулевой локальный регистр.
+        INFO[ret] = make("ret");
     }
 
     private static OPCodeInfo make(String name, Param... params) {

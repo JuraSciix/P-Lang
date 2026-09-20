@@ -1,5 +1,6 @@
 package plang.translator.codegen;
 
+import plang.interpreter.OPCodeList;
 import plang.translator.Ast.*;
 import plang.translator.TranslatorException;
 
@@ -18,7 +19,7 @@ public class Gen extends Visitor {
     }
 
     public Items.Item gen(Stmt stmt) {
-        return gen(stmt, mItems.direct());
+        return gen(stmt, mItems.directDest());
     }
 
     public Items.Item gen(Stmt stmt, Items.Dest dest) {
@@ -76,8 +77,15 @@ public class Gen extends Visitor {
 
     @Override
     public void returnOp(Return tree) {
-        Items.Item item = (tree.expr != null) ? gen(tree.expr) : mItems.direct().storeConst(0L);
-        mCode.emitter().opcodeWithByteIndex(ret, item.use().index());
+        Items.StableDest ret = mItems.retDest();
+        // Заметка: вызывать .use() не обязательно,
+        // так как item это всегда StableItem.
+        if (tree.expr != null) {
+            gen(tree.expr, ret);
+        } else {
+            ret.storeConst(0L);
+        }
+        mCode.emitter().opcode(OPCodeList.ret);
         resultItem = mItems.graph().aliveness(false);
     }
 
@@ -87,11 +95,11 @@ public class Gen extends Visitor {
         if (tree.name.hasItem()) {
             item = tree.name.item();
         } else {
-            item = mItems.stableItem();
+            item = mItems.stable();
             tree.name.setItem(item);
         }
 
-        gen(tree.expr, mItems.stable(item)).use();
+        gen(tree.expr, mItems.stableDest(item)).use();
         resultItem = item;
     }
 
@@ -111,20 +119,18 @@ public class Gen extends Visitor {
             }
 
             default: {
-                Items.Item lhsItem = gen(tree.lhs);
+                Items.Item lhsItem = gen(tree.lhs, destItem.safe());
                 Items.Item rhsItem = gen(tree.rhs);
 
-                int lhsIndex = lhsItem.use().index();
-                int rhsIndex = rhsItem.use().index();
-
                 int opcode = AstInfo.opcodeFromTag(tree.tag);
+                int lhsIndex = lhsItem.index();
+                int rhsIndex = rhsItem.use().index();
+                mCode.emitter().opcodeWithDoubleByteIndex(opcode, lhsIndex, rhsIndex);
+
                 if (AstInfo.isComparing(tree.tag)) {
-                    mCode.emitter().opcodeWithDoubleByteIndex(opcode, lhsIndex, rhsIndex);
                     resultItem = mItems.cond(destItem);
                 } else {
-                    Items.Item dest = destItem.prepare();
-                    mCode.emitter().opcodeWithTripleByteIndex(opcode, lhsIndex, rhsIndex, dest.index());
-                    resultItem = dest;
+                    resultItem = lhsItem;
                 }
             }
         }
@@ -132,16 +138,15 @@ public class Gen extends Visitor {
 
     @Override
     public void unaryOp(UnaryOp tree) {
-        Items.Item item = gen(tree.expr);
+        Items.Item item = gen(tree.expr, destItem);
         switch (tree.tag) {
             case NOT:
                 resultItem = item.toCond(destItem).negate();
                 break;
             case NEG:
-                int index = item.use().index();
-                Items.Item dest = destItem.prepare();
-                mCode.emitter().opcodeWithDoubleByteIndex(neg, index, dest.index());
-                resultItem = dest;
+                int index = item.index();
+                mCode.emitter().opcodeWithByteIndex(neg, index);
+                resultItem = item;
                 break;
         }
     }

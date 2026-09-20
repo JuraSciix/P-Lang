@@ -13,15 +13,23 @@ public class Items {
         directDest = new DirectDest();
     }
 
-    DirectDest direct() {
+    DirectDest directDest() {
         return directDest;
     }
 
-    StableDest stable(StableItem item) {
+    StableDest stableDest(StableItem item) {
         return new StableDest(item);
     }
 
-    StableItem stableItem() {
+    StableDest retDest() {
+        return new StableDest(new StableItem(0));
+    }
+
+    OneTimeItem oneTime() {
+        return new OneTimeItem();
+    }
+
+    StableItem stable() {
         return new StableItem(mCode.arena().acquire());
     }
 
@@ -63,6 +71,10 @@ public class Items {
         Item storeStable(int stableIndex) {
             throw new UnsupportedOperationException(getClass().getName());
         }
+
+        Dest safe() {
+            return this;
+        }
     }
 
     /**
@@ -81,13 +93,18 @@ public class Items {
 
         @Override
         Item storeConst(long value) {
-            OneTimeItem item = new OneTimeItem();
+            Item item = prepare();
             if (-1L <= value && value <= 2L) {
                 mCode.emitter().opcodeWithByteIndex(const_0 + (int) value, item.index());
             } else {
                 mCode.emitter().opcodeWithShortIndexAndByteIndex(load, mCode.constTable().lookup(value), item.index());
             }
             return item;
+        }
+
+        @Override
+        Dest safe() {
+            return stableDest(oneTime());
         }
     }
 
@@ -108,8 +125,11 @@ public class Items {
 
         @Override
         Item storeStable(int stableIndex) {
-            mCode.emitter().opcodeWithDoubleByteIndex(mov, stableIndex, item.index());
-            return new StableItem(stableIndex);
+            int destIndex = item.index();
+            if (stableIndex != destIndex) {
+                mCode.emitter().opcodeWithDoubleByteIndex(mov, stableIndex, destIndex);
+            }
+            return item;
         }
 
         @Override
@@ -119,7 +139,7 @@ public class Items {
             } else {
                 mCode.emitter().opcodeWithShortIndexAndByteIndex(load, mCode.constTable().lookup(value), item.index);
             }
-            return prepare();
+            return item;
         }
     }
 

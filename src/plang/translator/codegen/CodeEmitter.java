@@ -32,6 +32,11 @@ public final class CodeEmitter {
         }
     }
 
+    public void opcode(int opcode) {
+        ensureCapacity(1);
+        code.add((byte) opcode);
+    }
+
     public void opcodeWithByteIndex(int opcode, int index) {
         ensureCapacity(2);
         code.add((byte) opcode);

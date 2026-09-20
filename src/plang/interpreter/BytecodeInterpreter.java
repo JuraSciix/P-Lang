@@ -25,43 +25,43 @@ public final class BytecodeInterpreter {
         long[] data = buffer.get();
         boolean test = false;
         int state = STATE_RUN;
-        int returnAddress = 0;
 
         // Переносим данные из общей памяти в быструю
         System.arraycopy(arena, off, data, 0, size);
 
         while (state == STATE_RUN) {
-            int opcode = fetchUB(code, cp);
-            switch (opcode) {
+            int opcode;
+            switch (opcode = fetchUB(code, cp)) {
                 case add: case sub:
                 case mul: case div: case rem:
                 case bit_and: case bit_or: case bit_xor: {
-                    long lhs = data[fetchUB(code, cp + 1)];
-                    long rhs = data[fetchUB(code, cp + 2)];
-                    int ri = fetchUB(code, cp + 3);
-                    cp += 4;
+                    int r1 = fetchUB(code, cp + 1);
+                    int r2 = fetchUB(code, cp + 2);
+                    cp += 3;
                     switch (opcode) {
-                        case add:     data[ri] = lhs + rhs; continue;
-                        case sub:     data[ri] = lhs - rhs; continue;
-                        case mul:     data[ri] = lhs * rhs; continue;
-                        case div:     data[ri] = lhs / rhs; continue;
-                        case rem:     data[ri] = lhs % rhs; continue;
-                        case bit_and: data[ri] = lhs & rhs; continue;
-                        case bit_or:  data[ri] = lhs | rhs; continue;
-                        case bit_xor: data[ri] = lhs ^ rhs; continue;
+                        case add:     data[r1] = data[r1] + data[r2]; continue;
+                        case sub:     data[r1] = data[r1] - data[r2]; continue;
+                        case mul:     data[r1] = data[r1] * data[r2]; continue;
+                        case div:     data[r1] = data[r1] / data[r2]; continue;
+                        case rem:     data[r1] = data[r1] % data[r2]; continue;
+                        case bit_and: data[r1] = data[r1] & data[r2]; continue;
+                        case bit_or:  data[r1] = data[r1] | data[r2]; continue;
+                        case bit_xor: data[r1] = data[r1] ^ data[r2]; continue;
                         default: throw new AssertionError();
                     }
                 }
 
                 case bit_inv: {
-                    data[fetchUB(code, cp + 2)] = ~data[fetchUB(code, cp + 1)];
-                    cp += 3;
+                    int i = fetchUB(code, cp + 1);
+                    data[i] = ~data[i];
+                    cp += 2;
                     continue;
                 }
 
                 case neg: {
-                    data[fetchUB(code, cp + 2)] = -data[fetchUB(code, cp + 1)];
-                    cp += 3;
+                    int i = fetchUB(code, cp + 1);
+                    data[i] = -data[i];
+                    cp += 2;
                     continue;
                 }
 
@@ -123,8 +123,7 @@ public final class BytecodeInterpreter {
 
                 case ret:
                     state = STATE_RETURN;
-                    returnAddress = off + fetchUB(code, cp + 1);
-                    cp += 2;
+                    cp += 1;
                     break;
 
                 default: throw new AssertionError("Illegal opcode");
@@ -134,6 +133,6 @@ public final class BytecodeInterpreter {
         // Переносим данные из быстрой памяти в общую
         System.arraycopy(data, 0, arena, off, size);
 
-        return returnAddress;
+        return 0;
     }
 }
