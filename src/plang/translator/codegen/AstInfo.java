@@ -22,8 +22,4 @@ public class AstInfo {
 
         throw new AssertionError(tag.name());
     }
-
-    public static boolean isComparing(Tag tag) {
-        return 0 <= tag.compareTo(Tag.CMP_EQ) && tag.compareTo(Tag.CMP_LE) <= 0;
-    }
 }

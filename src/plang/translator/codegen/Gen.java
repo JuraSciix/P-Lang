@@ -5,6 +5,7 @@ import plang.translator.Ast.*;
 import plang.translator.TranslatorException;
 
 import static plang.interpreter.OPCodeList.*;
+import static plang.translator.codegen.AstInfo.opcodeFromTag;
 
 public class Gen extends Visitor {
     private final Code mCode;
@@ -118,20 +119,25 @@ public class Gen extends Visitor {
                 break;
             }
 
+            case CMP_EQ: case CMP_NE:
+            case CMP_LT: case CMP_GE:
+            case CMP_GT: case CMP_LE: {
+                Items.Item lhsItem = gen(tree.lhs);
+                Items.Item rhsItem = gen(tree.rhs);
+                int lhsIndex = lhsItem.use().index();
+                int rhsIndex = rhsItem.use().index();
+                mCode.emitter().opcodeWithDoubleByteIndex(opcodeFromTag(tree.tag), lhsIndex, rhsIndex);
+                resultItem = mItems.cond(destItem);
+                break;
+            }
+
             default: {
                 Items.Item lhsItem = gen(tree.lhs, destItem.safe());
                 Items.Item rhsItem = gen(tree.rhs);
-
-                int opcode = AstInfo.opcodeFromTag(tree.tag);
                 int lhsIndex = lhsItem.index();
                 int rhsIndex = rhsItem.use().index();
-                mCode.emitter().opcodeWithDoubleByteIndex(opcode, lhsIndex, rhsIndex);
-
-                if (AstInfo.isComparing(tree.tag)) {
-                    resultItem = mItems.cond(destItem);
-                } else {
-                    resultItem = lhsItem;
-                }
+                mCode.emitter().opcodeWithDoubleByteIndex(opcodeFromTag(tree.tag), lhsIndex, rhsIndex);
+                resultItem = lhsItem;
             }
         }
     }
