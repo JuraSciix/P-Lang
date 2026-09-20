@@ -27,4 +27,15 @@ public final class CodeArena {
         assert !field.get(index) : "Index " + index + " already was free";
         field.set(index);
     }
+
+    // Особые операции, нарушающие естественную последовательность операций.
+    // Необходимо для инструкции ret, которая нагло забирает себе нулевой регистр.
+
+    public boolean test(int index) {
+        return field.get(index);
+    }
+
+    public void reset(int index, boolean value) {
+        field.set(index, value);
+    }
 }

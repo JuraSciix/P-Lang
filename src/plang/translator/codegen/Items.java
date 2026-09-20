@@ -22,7 +22,11 @@ public class Items {
     }
 
     StableDest retDest() {
-        return new StableDest(new StableItem(0));
+        // Освобождаем нулевой регистр, чтобы новый item занял его.
+        // ВАЖНО: после работы с этим Dest состояние нулевого регистра
+        // должно быть возвращено.
+        mCode.arena().reset(0, true);
+        return stableDest(oneTime());
     }
 
     OneTimeItem oneTime() {

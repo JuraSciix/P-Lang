@@ -78,6 +78,8 @@ public class Gen extends Visitor {
 
     @Override
     public void returnOp(Return tree) {
+        // Запоминаем состояние нулевого регистра, чтобы вернуть его после инструкции.
+        boolean test = mCode.arena().test(0);
         Items.StableDest ret = mItems.retDest();
         // Заметка: вызывать .use() не обязательно,
         // так как item это всегда StableItem.
@@ -88,6 +90,8 @@ public class Gen extends Visitor {
         }
         mCode.emitter().opcode(OPCodeList.ret);
         resultItem = mItems.graph().aliveness(false);
+        // Возвращаем состояние регистра
+        mCode.arena().reset(0, test);
     }
 
     @Override
