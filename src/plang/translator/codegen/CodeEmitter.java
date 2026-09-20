@@ -65,14 +65,6 @@ public final class CodeEmitter {
         code.add((byte) index2);
     }
 
-    public void opcodeWithTripleByteIndex(int opcode, int index1, int index2, int index3) {
-        ensureCapacity(4);
-        code.add((byte) opcode);
-        code.add((byte) index1);
-        code.add((byte) index2);
-        code.add((byte) index3);
-    }
-
     public void setShortIndex(int index, int value) {
         code.set(index, (byte) value);
         code.set(index + 1, (byte) (value >> 8));
