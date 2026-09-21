@@ -8,6 +8,7 @@ public final class CodeArena {
     private static final int LIMIT = 256;
 
     private final BitSet field;
+    private int limit;
 
     public CodeArena() {
         field = new BitSet(LIMIT);
@@ -20,6 +21,7 @@ public final class CodeArena {
             throw new TranslatorException("No more free indexes");
         }
         field.clear(index);
+        limit = Math.max(index, limit);
         return index;
     }
 
@@ -27,6 +29,12 @@ public final class CodeArena {
         assert !field.get(index) : "Index " + index + " already was free";
         field.set(index);
     }
+
+    /**
+     * Возвращает максимальный задействованный регистр.
+     * Можно использовать как "размер памяти" программы.
+     */
+    public int limit() { return limit; }
 
     // Особые операции, нарушающие естественную последовательность операций.
     // Необходимо для инструкции ret, которая нагло забирает себе нулевой регистр.

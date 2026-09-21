@@ -62,7 +62,7 @@ public class Main {
     static long run(CodeData data) {
         long[] memoryData = new long[256];
         BytecodeInterpreter interpreter = new BytecodeInterpreter();
-        int result = interpreter.run(data.code, data.constantPool, 0, memoryData, 0, 10);
+        int result = interpreter.run(data.code, data.constantPool, 0, memoryData, 0, data.dataSize);
         return memoryData[result];
     }
 
@@ -108,7 +108,7 @@ public class Main {
                 long[] memoryData = new long[256];
                 BytecodeInterpreter interpreter = new BytecodeInterpreter();
                 long runTx = System.nanoTime();
-                interpreter.run(data.code, data.constantPool, 0, memoryData, 0, 10);
+                interpreter.run(data.code, data.constantPool, 0, memoryData, 0, data.dataSize);
                 long runTy = System.nanoTime();
                 runMeasures[i] = runTy - runTx;
             }

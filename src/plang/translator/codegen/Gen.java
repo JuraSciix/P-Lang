@@ -1,6 +1,5 @@
 package plang.translator.codegen;
 
-import plang.interpreter.OPCodeList;
 import plang.translator.Ast.*;
 import plang.translator.TranslatorException;
 
@@ -80,13 +79,13 @@ public class Gen extends Visitor {
     public void returnOp(Return tree) {
         // Запоминаем состояние нулевого регистра, чтобы вернуть его после инструкции.
         boolean test = mCode.arena().test(0);
-        Items.StableDest ret = mItems.retDest();
+        Items.StableDest dest = mItems.retDest();
         if (tree.expr != null) {
-            gen(tree.expr, ret).use();
+            gen(tree.expr, dest).use();
         } else {
-            ret.storeConst(0L).use();
+            dest.storeConst(0L).use();
         }
-        mCode.emitter().opcode(OPCodeList.ret);
+        mCode.emitter().opcode(ret);
         resultItem = mItems.graph().aliveness(false);
         // Возвращаем состояние регистра
         mCode.arena().reset(0, test);
