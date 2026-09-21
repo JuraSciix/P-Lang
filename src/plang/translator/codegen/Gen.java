@@ -81,12 +81,10 @@ public class Gen extends Visitor {
         // Запоминаем состояние нулевого регистра, чтобы вернуть его после инструкции.
         boolean test = mCode.arena().test(0);
         Items.StableDest ret = mItems.retDest();
-        // Заметка: вызывать .use() не обязательно,
-        // так как item это всегда StableItem.
         if (tree.expr != null) {
-            gen(tree.expr, ret);
+            gen(tree.expr, ret).use();
         } else {
-            ret.storeConst(0L);
+            ret.storeConst(0L).use();
         }
         mCode.emitter().opcode(OPCodeList.ret);
         resultItem = mItems.graph().aliveness(false);
