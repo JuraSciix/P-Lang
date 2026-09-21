@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import static plang.interpreter.OPCodeList.*;
 
-public class Items {
+public final class Items {
     private final Code mCode;
     private final DirectDest directDest;
 
@@ -48,7 +48,12 @@ public class Items {
     /**
      * Слот для записи.
      */
-    public abstract class Dest {
+    abstract class Dest {
+
+        Dest safe() {
+            return this;
+        }
+
         /**
          * Подготавливает слот к использованию. Может создаваться новый одноразовый слот.
          */
@@ -75,16 +80,17 @@ public class Items {
         Item storeStable(int stableIndex) {
             throw new UnsupportedOperationException(getClass().getName());
         }
-
-        Dest safe() {
-            return this;
-        }
     }
 
     /**
      * Прямой слот. Используется для того, чтобы напрямую получать значения.
      */
-    class DirectDest extends Dest {
+    public class DirectDest extends Dest {
+        @Override
+        Dest safe() {
+            return stableDest(oneTime());
+        }
+
         @Override
         Item prepare() {
             return new OneTimeItem();
@@ -105,11 +111,6 @@ public class Items {
             }
             return item;
         }
-
-        @Override
-        Dest safe() {
-            return stableDest(oneTime());
-        }
     }
 
     /**
@@ -123,9 +124,7 @@ public class Items {
         }
 
         @Override
-        Item prepare() {
-            return _item;
-        }
+        Item prepare() { return _item; }
 
         @Override
         Item storeStable(int stableIndex) {
@@ -165,7 +164,7 @@ public class Items {
          * Объявляет регистр использованным.
          * После этого регистр может автоматически освободиться.
          */
-        Item use() {
+        public Item use() {
             throw new UnsupportedOperationException(getClass().getName());
         }
 
@@ -193,7 +192,7 @@ public class Items {
         }
 
         @Override
-        Item use() { return this; }
+        public Item use() { return this; }
 
         @Override
         public boolean alive() { return _alive; }
@@ -220,7 +219,7 @@ public class Items {
         }
 
         @Override
-        Item use() { return this; }
+        public Item use() { return this; }
 
         @Override
         public int index() { return _index; }
@@ -237,7 +236,7 @@ public class Items {
         }
 
         @Override
-        Item use() {
+        public Item use() {
             mCode.arena().release(index());
             return this;
         }
@@ -288,13 +287,13 @@ public class Items {
         }
 
         @Override
-        CondItem toCond(Dest dest) {
+        public CondItem toCond(Dest dest) {
             _dest = dest;
             return this;
         }
 
         @Override
-        Item use() {
+        public Item use() {
             Item item = _dest.prepare();
             Mark elseMark = mCode.jump(_opcode, _falseJumps);
             mCode.close(_trueJumps);
