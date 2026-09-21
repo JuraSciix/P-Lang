@@ -116,19 +116,20 @@ public class Items {
      * Слот переменной. Запись будет осуществляться в переменную.
      */
     class StableDest extends Dest {
-        final StableItem item;
+        private final StableItem _item;
 
         StableDest(StableItem item) {
-            this.item = item;
+            _item = item;
         }
 
         @Override
         Item prepare() {
-            return item;
+            return _item;
         }
 
         @Override
         Item storeStable(int stableIndex) {
+            Item item = prepare();
             int destIndex = item.index();
             if (stableIndex != destIndex) {
                 mCode.emitter().opcodeWithDoubleByteIndex(mov, stableIndex, destIndex);
@@ -138,10 +139,11 @@ public class Items {
 
         @Override
         Item storeConst(long value) {
+            Item item = prepare();
             if (-1L <= value && value <= 2L) {
                 mCode.emitter().opcodeWithByteIndex(const_0 + (int) value, item.index());
             } else {
-                mCode.emitter().opcodeWithShortIndexAndByteIndex(load, mCode.constTable().lookup(value), item.index);
+                mCode.emitter().opcodeWithShortIndexAndByteIndex(load, mCode.constTable().lookup(value), item.index());
             }
             return item;
         }
@@ -183,32 +185,28 @@ public class Items {
      * Пустой предмет. Ничего не удерживает, ничего не освобождает.
      */
     class GraphItem extends Item {
-        private boolean alive = true;
+        private boolean _alive = true;
 
-        GraphItem aliveness(boolean state) {
-            alive = state;
+        GraphItem aliveness(boolean alive) {
+            _alive = alive;
             return this;
         }
 
         @Override
-        Item use() {
-            return this;
-        }
+        Item use() { return this; }
 
         @Override
-        public boolean alive() {
-            return alive;
-        }
+        public boolean alive() { return _alive; }
     }
 
     /**
      * Стабильный слот. Это переменная. Индекс не освобождается.
      */
     class StableItem extends Item {
-        private final int index;
+        private final int _index;
 
         StableItem(int index) {
-            this.index = index;
+            _index = index;
         }
 
         @Override
@@ -222,12 +220,10 @@ public class Items {
         }
 
         @Override
-        Item use() {
-            return this;
-        }
+        Item use() { return this; }
 
         @Override
-        public int index() { return index; }
+        public int index() { return _index; }
     }
 
     /**
@@ -251,57 +247,57 @@ public class Items {
      * Слот над логическим значением.
      */
     class CondItem extends Item {
-        private int opcode;
-        private Dest dest;
-        private Mark trueMarks;
-        private Mark falseMarks;
+        private int _opcode;
+        private Dest _dest;
+        private Mark _trueJumps;
+        private Mark _falseJumps;
 
         CondItem(int opcode, Dest dest) {
-            this.opcode = opcode;
-            this.dest = dest;
+            _opcode = opcode;
+            _dest = dest;
         }
 
         CondItem negate() {
-            opcode = OPCodes.negate(opcode);
-            Mark tmp = falseMarks;
-            falseMarks = trueMarks;
-            trueMarks = tmp;
+            _opcode = OPCodes.negate(_opcode);
+            Mark tmp = _falseJumps;
+            _falseJumps = _trueJumps;
+            _trueJumps = tmp;
             return this;
         }
 
         Mark emitFalseJump() {
-            Mark mark = mCode.jump(opcode, falseMarks);
-            mCode.close(trueMarks);
+            Mark mark = mCode.jump(_opcode, _falseJumps);
+            mCode.close(_trueJumps);
             return mark;
         }
 
         Mark emitTrueJump() {
-            Mark mark = mCode.jump(OPCodes.negate(opcode), trueMarks);
-            mCode.close(falseMarks);
+            Mark mark = mCode.jump(OPCodes.negate(_opcode), _trueJumps);
+            mCode.close(_falseJumps);
             return mark;
         }
 
-        CondItem coalesceTrueJumps(Mark trueMarks) {
-            this.trueMarks = Mark.merge(this.trueMarks, trueMarks);
+        CondItem coalesceTrueJumps(Mark trueJumps) {
+            _trueJumps = Mark.merge(_trueJumps, trueJumps);
             return this;
         }
 
-        CondItem coalesceFalseJumps(Mark falseMarks) {
-            this.falseMarks = Mark.merge(this.falseMarks, falseMarks);
+        CondItem coalesceFalseJumps(Mark falseJumps) {
+            _falseJumps = Mark.merge(_falseJumps, falseJumps);
             return this;
         }
 
         @Override
         CondItem toCond(Dest dest) {
-            this.dest = dest;
+            _dest = dest;
             return this;
         }
 
         @Override
         Item use() {
-            Item item = dest.prepare();
-            Mark elseMark = mCode.jump(opcode, falseMarks);
-            mCode.close(trueMarks);
+            Item item = _dest.prepare();
+            Mark elseMark = mCode.jump(_opcode, _falseJumps);
+            mCode.close(_trueJumps);
             mCode.emitter().opcodeWithByteIndex(const_1, item.index());
             Mark exitMark = mCode.jump(jump, null);
             mCode.close(elseMark);

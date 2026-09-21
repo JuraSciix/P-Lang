@@ -23,7 +23,7 @@ public class Gen extends Visitor {
         return gen(stmt, mItems.directDest());
     }
 
-    public Items.Item gen(Stmt stmt, Items.Dest dest) {
+    Items.Item gen(Stmt stmt, Items.Dest dest) {
         Items.Dest prevDest = destItem;
         Items.Item prevResult = resultItem;
 
